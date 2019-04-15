@@ -16,7 +16,6 @@
       }
 
       .container {
-        position: absolute;
         border: 2px solid black;
         width: 80vw;
         margin: auto;
@@ -28,7 +27,22 @@
         width: 70%;
         margin: 30px auto;
         padding: 10px;
-        text-align: left;
+      }
+
+      .buttoncontainer {
+        margin: 10px 0;
+      }
+
+      .buttoncontainer > *:not(:first-child) {
+        margin-left: 20px;
+      }
+
+      .buttoncontainer > *:not(:last-child) {
+        margin-right: 20px;
+      }
+
+      .buttoncontainer > input {
+        width: 3em;
       }
     </style>
   </head>
@@ -38,16 +52,40 @@
       You need to enable JavaScript to run this app.
     </noscript>
     <h1>Emil's Random Drawer of Fun Stuff</h1>
-    <div class="container">
-      <h3>3-Style Corner Random Practice Order</h2>
-        <div class="displaybox" id="threestyledisplay">
-          There will be data here
-        </div>
+    <div class="container" id="threestylecontainer">
+      <h3>3-Style Corner Random Practice Order</h3>
+      <h4>Currently learned pairs</h4>
+      <div class="displaybox" id="threestyledisplay">
+        Fetching data...
+      </div>
+      <div class="buttoncontainer">
+        Number of pairs to test:
+        <input type="number" value="0" size="2" disabled />
+        <button disabled>Run Test</button>
+      </div>
     </div>
   </body>
   <script>
-    fetch('https://emils-api.herokuapp.com/threestyledata').then(body => {
-      console.log(body);
-    })
+    fetch("https://emils-api.herokuapp.com/threestyledata")
+      .then(x => x.json())
+      .then(body => {
+        document.getElementById("threestyledisplay").innerText = body
+          .map(x => x.pair)
+          .reduce((prev, cur) => `${prev} ${cur}`);
+
+        document.querySelector("#threestylecontainer h4").innerText +=
+          " (" + body.length.toString() + ")";
+        document
+          .querySelectorAll("#threestylecontainer .buttoncontainer > *")
+          .forEach(x => {
+            x.disabled = false;
+            console.log(x.tagName);
+            if (x.tagName === "INPUT") {
+              x.min = 1;
+              x.max = body.length;
+              x.value = Math.min(10, x.max);
+            }
+          });
+      });
   </script>
 </html>
