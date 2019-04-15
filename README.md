@@ -1,2 +1,1 @@
-# emilgoldsmith.github.io
-The personal website for Emil Goldsmith Olesen
+Just some random stuff I wanted to play with and have available in a browser
