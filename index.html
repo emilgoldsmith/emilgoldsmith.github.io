@@ -96,6 +96,7 @@
       <div class="testcontainer" style="display: none;">
         <h3 class="timer">The Time For Current Pair Will Be Shown Here</h3>
         <h3 class="curpair">The Pair being Tested Will Show Here</h3>
+        <h3 class="alg"></h3>
         <p class="explanation">Press Space To Start Next Pair</p>
         <div class="resultscontainer" style="display: none;">
           <h4>Results:</h4>
@@ -161,6 +162,8 @@
           } else if (e.key === "w") {
             judgeResult(false);
             addResult();
+          } else if (e.key === "s") {
+            showAlg();
           }
         }
       },
@@ -170,7 +173,7 @@
     const explanationTypes = {
       PAUSED: "Press Space To Start Next Pair",
       VERDICT:
-        "Press C for correct, W for wrong and H for showing the correct algorithm",
+        "Press C for correct, W for wrong and S for showing the correct algorithm (do this before judging the attempt)",
       RUNNING: "Press Space When Finished",
       FINISHED: "The Test Is Over"
     };
@@ -247,7 +250,20 @@
       updateResults();
     }
 
+    function showAlg() {
+      document.querySelector(
+        "#threestylecontainer .testcontainer h3.alg"
+      ).innerText = results[curTestIndex - 1].alg;
+    }
+
+    function hideAlg() {
+      document.querySelector(
+        "#threestylecontainer .testcontainer h3.alg"
+      ).innerText = "";
+    }
+
     function addResult() {
+      hideAlg();
       const result = results[results.length - 1];
       const prevValue = getResults();
       setResults(
