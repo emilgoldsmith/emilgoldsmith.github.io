@@ -119,14 +119,17 @@
       FINISHED: 5
     };
     let testState = states.NOT_RUNNING;
+    let pauseBetween = null;
+    let numPairsToRun = null;
 
     function runTest() {
-      const pauseBetween = document.querySelector(
+      pauseBetween = document.querySelector(
         '#threestylecontainer input[type="checkbox"]'
       ).checked;
-      const numPairsToRun = document.querySelector(
-        '#threestylecontainer input[type="number"]'
-      ).value;
+      numPairsToRun = Number(
+        document.querySelector('#threestylecontainer input[type="number"]')
+          .value
+      );
 
       shuffleArray(data);
       prepTest();
@@ -143,6 +146,15 @@
             nextTest();
           else if (testState === states.RUNNING) stopTest();
         }
+        if (testState === states.AWAITING_VERDICT) {
+          if (e.key === "c") {
+            judgeResult(true);
+            addResult();
+          } else if (e.key === "w") {
+            judgeResult(false);
+            addResult();
+          }
+        }
       },
       true
     );
@@ -150,7 +162,9 @@
     const explanationTypes = {
       PAUSED: "Press Space To Start Next Pair",
       VERDICT:
-        "Press C for correct, W for wrong and H for showing the correct algorithm"
+        "Press C for correct, W for wrong and H for showing the correct algorithm",
+      RUNNING: "Press Space When Finished",
+      FINISHED: "The Test Is Over"
     };
 
     function setExplanation(text) {
@@ -203,6 +217,7 @@
       updateTimer();
       timerTimeout = setInterval(updateTimer, 50);
       setPairUI(data[curTestIndex].pair);
+      setExplanation(explanationTypes.RUNNING);
     }
 
     function getResults() {
@@ -212,16 +227,34 @@
     }
 
     function setResults(text) {
-      document.querySelector(
+      const node = document.querySelector(
         "#threestylecontainer .testcontainer .resultscontainer .results"
-      ).innerText = text;
+      );
+      node.innerText = text;
     }
 
-    function addResult(result) {
+    function addResult() {
+      const result = results[results.length - 1];
       const prevValue = getResults();
       setResults(
-        `${prevValue}${prevValue ? "\n" : ""}${result.pair}: ${result.time}`
+        `${prevValue}${prevValue ? "\n" : ""}${curTestIndex}. ${
+          result.pair
+        }: ${(result.time / 1000).toFixed(3)} - ${result.verdict}`
       );
+      if (curTestIndex === 1)
+        document.querySelector(
+          "#threestylecontainer .testcontainer .resultscontainer"
+        ).style.display = "block";
+      if (curTestIndex === numPairsToRun) completeTest();
+      else if (pauseBetween) {
+        setExplanation(explanationTypes.PAUSED);
+        testState = states.IN_BETWEEN;
+      } else nextTest();
+    }
+
+    function judgeResult(isCorrect) {
+      const verdict = isCorrect ? "Correct" : "Wrong";
+      results[results.length - 1].verdict = verdict;
     }
 
     function stopTest() {
@@ -233,18 +266,12 @@
       setExplanation(explanationTypes.VERDICT);
       results.push({ ...data[curTestIndex], time: testResult });
       curTestIndex++;
-      if (
-        curTestIndex ==
-        document.querySelector(
-          '#threestylecontainer .buttoncontainer input[type="number"]'
-        ).value
-      )
-        completeTest();
     }
 
     function completeTest() {
       testState = states.FINISHED;
       setFormDisable(false);
+      setExplanation(explanationTypes.FINISHED);
     }
 
     fetch("https://emils-api.herokuapp.com/threestyledata")
