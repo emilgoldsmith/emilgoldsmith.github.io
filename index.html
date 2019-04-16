@@ -100,6 +100,7 @@
         <div class="resultscontainer" style="display: none;">
           <h4>Results:</h4>
           <div class="displaybox results"></div>
+          <h5 class="resultssummary"></h5>
         </div>
       </div>
     </div>
@@ -133,6 +134,13 @@
 
       shuffleArray(data);
       prepTest();
+    }
+
+    function runFullTest() {
+      document.querySelector(
+        '#threestylecontainer input[type="number"]'
+      ).value = data.length;
+      runTest();
     }
 
     window.addEventListener(
@@ -188,6 +196,7 @@
       results = [];
 
       setFormDisable(true);
+      setResults("");
 
       document.querySelector(
         "#threestylecontainer .testcontainer"
@@ -231,6 +240,11 @@
         "#threestylecontainer .testcontainer .resultscontainer .results"
       );
       node.innerText = text;
+      if (text === "")
+        document.querySelector(
+          "#threestylecontainer .testcontainer .resultscontainer"
+        ).style.display = "none";
+      updateResults();
     }
 
     function addResult() {
@@ -272,6 +286,86 @@
       testState = states.FINISHED;
       setFormDisable(false);
       setExplanation(explanationTypes.FINISHED);
+    }
+
+    function updateResults() {
+      let resultSummary = "";
+      if (results.length > 0) {
+        const resultsInSeconds = results.map(x => ({
+          ...x,
+          time: x.time / 1000
+        }));
+
+        function mean(arr) {
+          return arr.reduce((sum, cur) => sum + cur.time, 0) / arr.length;
+        }
+
+        const meanWithoutVerdict = mean(resultsInSeconds);
+        resultSummary = `Mean (including DNF): ${meanWithoutVerdict.toFixed(
+          3
+        )}`;
+        const meanOfCorrect = mean(
+          resultsInSeconds.filter(x => x.verdict === "Correct")
+        );
+        resultSummary += `\nMean (excluding DNF): ${meanOfCorrect.toFixed(3)}`;
+        const sortedResultsInSeconds = [...resultsInSeconds];
+        function compareResults(a, b) {
+          if (a.verdict === "Wrong" && b.verdict === "Wrong") return 0;
+          if (a.verdict === "Wrong") return 1;
+          if (b.verdict === "Wrong") return -1;
+          return a.time - b.time;
+        }
+        sortedResultsInSeconds.sort(compareResults);
+        const getDNF = res => (res.verdict === "Wrong" ? "DNF" : res.time);
+        const high = getDNF(sortedResultsInSeconds[results.length - 1]);
+        resultSummary += `\nWorst Time: ${
+          high !== "DNF" ? high.toFixed(3) : high
+        }`;
+        const low = getDNF(sortedResultsInSeconds[0]);
+        resultSummary += `\nBest Time: ${low.toFixed(3)}`;
+        function getAvg(arr) {
+          const normalizedArray = arr
+            .sort(compareResults)
+            .slice(1, arr.length - 1);
+          let result = normalizedArray.map(getDNF).find(x => x === "DNF");
+          if (result === undefined) {
+            result = mean(normalizedArray);
+          }
+          return result;
+        }
+        function getBestAverageString(sizeToAvg) {
+          const bestAvg = resultsInSeconds.reduce((prev, cur, index) => {
+            if (index < sizeToAvg - 1) return prev;
+            const avg = getAvg(
+              resultsInSeconds.slice(index - sizeToAvg + 1, index + 1)
+            );
+            if (
+              prev === null ||
+              (typeof avg === "number" && typeof prev === "string") ||
+              (typeof avg === "number" &&
+                typeof prev === "number" &&
+                avg < prev)
+            )
+              return avg;
+            return prev;
+          }, null);
+          return `\nBest Average of ${sizeToAvg}: ${
+            typeof bestAvg === "number" ? bestAvg.toFixed(3) : bestAvg
+          }`;
+        }
+        if (results.length >= 5) {
+          resultSummary += getBestAverageString(5);
+        }
+        if (results.length >= 12) {
+          resultSummary += getBestAverageString(12);
+        }
+        if (results.length >= 100) {
+          resultSummary += getBestAverageString(100);
+        }
+      }
+      document.querySelector(
+        "#threestylecontainer .testcontainer .resultscontainer h5.resultssummary"
+      ).innerText = resultSummary;
     }
 
     fetch("https://emils-api.herokuapp.com/threestyledata")
