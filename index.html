@@ -62,6 +62,15 @@
         width: 1px;
         height: 1px;
       }
+
+      .testcontainer .displaybox {
+        margin-top: 10px;
+      }
+
+      .testcontainer h4 {
+        margin-bottom: 10px;
+        margin-top: 40px;
+      }
     </style>
   </head>
 
@@ -79,14 +88,19 @@
       </div>
       <div class="buttoncontainer">
         <span>Number of pairs to test:</span>
-        <input type="number" value="0" size="2" disabled />
+        <input type="number" value="0" disabled />
         <button disabled onclick="runTest()">Run Partial Test</button>
         <button disabled onclick="runFullTest()">Test All</button>
         <span>Pause between pairs</span><input type="checkbox" disabled />
       </div>
       <div class="testcontainer" style="display: none;">
-        <h3 class="timer">1.5</h3>
-        <h3 class="curpair"></h3>
+        <h3 class="timer">The Time For Current Pair Will Be Shown Here</h3>
+        <h3 class="curpair">The Pair being Tested Will Show Here</h3>
+        <p class="explanation">Press Space To Start Next Pair</p>
+        <div class="resultscontainer" style="display: none;">
+          <h4>Results:</h4>
+          <div class="displaybox results"></div>
+        </div>
       </div>
     </div>
   </body>
@@ -96,7 +110,15 @@
     let timerTimeout = null;
     let testStart = null;
     let results = [];
-    let testRunning = false;
+    const states = {
+      NOT_RUNNING: 0,
+      RUNNING: 1,
+      IN_BETWEEN: 2,
+      BEFORE_START: 3,
+      AWAITING_VERDICT: 4,
+      FINISHED: 5
+    };
+    let testState = states.NOT_RUNNING;
 
     function runTest() {
       const pauseBetween = document.querySelector(
@@ -107,28 +129,51 @@
       ).value;
 
       shuffleArray(data);
-      setUIToTestMode();
-      testRunning = true;
+      prepTest();
     }
 
     window.addEventListener(
       "keyup",
       e => {
-        console.log(e.key);
-        if (testRunning && e.key === " ") {
-          nextTest();
+        if (e.key === " ") {
+          if (
+            testState === states.IN_BETWEEN ||
+            testState === states.BEFORE_START
+          )
+            nextTest();
+          else if (testState === states.RUNNING) stopTest();
         }
       },
       true
     );
 
-    function setUIToTestMode() {
-      curTestIndex = 0;
+    const explanationTypes = {
+      PAUSED: "Press Space To Start Next Pair",
+      VERDICT:
+        "Press C for correct, W for wrong and H for showing the correct algorithm"
+    };
+
+    function setExplanation(text) {
+      document.querySelector(
+        "#threestylecontainer .testcontainer .explanation"
+      ).innerText = text;
+    }
+
+    function setFormDisable(disabled) {
       document
         .querySelectorAll("#threestylecontainer .buttoncontainer > :not(span)")
         .forEach(x => {
-          x.disabled = true;
+          x.disabled = disabled;
         });
+    }
+
+    function prepTest() {
+      curTestIndex = 0;
+      testState = states.BEFORE_START;
+      setExplanation(explanationTypes.PAUSED);
+      results = [];
+
+      setFormDisable(true);
 
       document.querySelector(
         "#threestylecontainer .testcontainer"
@@ -136,16 +181,70 @@
       document.getElementById("dummyinput").focus();
     }
 
+    function setTimerUI(timeInMs) {
+      document.querySelector(
+        "#threestylecontainer .testcontainer h3.timer"
+      ).innerText = (timeInMs / 1000).toFixed(3);
+    }
+
+    function setPairUI(pair) {
+      document.querySelector(
+        "#threestylecontainer .testcontainer h3.curpair"
+      ).innerText = pair;
+    }
+
     function nextTest() {
+      testState = states.RUNNING;
       testStart = new Date().getTime();
       function updateTimer() {
         const curTime = new Date().getTime();
-        document.querySelector(
-          "#threestylecontainer .testcontainer h3.timer"
-        ).innerText = ((curTime - testStart) / 1000).toFixed(3);
+        setTimerUI(curTime - testStart);
       }
       updateTimer();
       timerTimeout = setInterval(updateTimer, 50);
+      setPairUI(data[curTestIndex].pair);
+    }
+
+    function getResults() {
+      return document.querySelector(
+        "#threestylecontainer .testcontainer .resultscontainer .results"
+      ).innerText;
+    }
+
+    function setResults(text) {
+      document.querySelector(
+        "#threestylecontainer .testcontainer .resultscontainer .results"
+      ).innerText = text;
+    }
+
+    function addResult(result) {
+      const prevValue = getResults();
+      setResults(
+        `${prevValue}${prevValue ? "\n" : ""}${result.pair}: ${result.time}`
+      );
+    }
+
+    function stopTest() {
+      testState = states.AWAITING_VERDICT;
+      const curTime = new Date().getTime();
+      const testResult = curTime - testStart;
+      clearTimeout(timerTimeout);
+      setTimerUI(testResult);
+      setExplanation(explanationTypes.VERDICT);
+      results.push({ ...data[curTestIndex], time: testResult });
+      curTestIndex++;
+      if (
+        curTestIndex ==
+        document.querySelector(
+          '#threestylecontainer .buttoncontainer input[type="number"]'
+        ).value
+      )
+        completeTest();
+    }
+
+    function completeTest() {
+      testState = states.FINISHED;
+      setFormDisable(false);
     }
 
     fetch("https://emils-api.herokuapp.com/threestyledata")
