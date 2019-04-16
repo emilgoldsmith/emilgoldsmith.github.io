@@ -33,16 +33,34 @@
         margin: 10px 0;
       }
 
-      .buttoncontainer > *:not(:first-child) {
+      .buttoncontainer > *:not(:first-child):not(span):not(span + input) {
         margin-left: 20px;
       }
 
-      .buttoncontainer > *:not(:last-child) {
+      .buttoncontainer > *:not(:last-child):not(span) {
         margin-right: 20px;
       }
 
-      .buttoncontainer > input {
+      .buttoncontainer > input[type="number"] {
         width: 3em;
+      }
+
+      .buttoncontainer > input[type="checkbox"]:focus {
+        outline: none;
+      }
+
+      #dummyinput:focus {
+        outline: none;
+      }
+
+      #dummyinput {
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        background-color: beige;
+        border: none;
+        width: 1px;
+        height: 1px;
       }
     </style>
   </head>
@@ -51,6 +69,7 @@
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
+    <input id="dummyinput" />
     <h1>Emil's Random Drawer of Fun Stuff</h1>
     <div class="container" id="threestylecontainer">
       <h3>3-Style Corner Random Practice Order</h3>
@@ -59,33 +78,108 @@
         Fetching data...
       </div>
       <div class="buttoncontainer">
-        Number of pairs to test:
+        <span>Number of pairs to test:</span>
         <input type="number" value="0" size="2" disabled />
-        <button disabled>Run Test</button>
+        <button disabled onclick="runTest()">Run Partial Test</button>
+        <button disabled onclick="runFullTest()">Test All</button>
+        <span>Pause between pairs</span><input type="checkbox" disabled />
+      </div>
+      <div class="testcontainer" style="display: none;">
+        <h3 class="timer">1.5</h3>
+        <h3 class="curpair"></h3>
       </div>
     </div>
   </body>
-  <script>
+  <script type="text/javascript">
+    let data = null;
+    let curTestIndex = 0;
+    let timerTimeout = null;
+    let testStart = null;
+    let results = [];
+    let testRunning = false;
+
+    function runTest() {
+      const pauseBetween = document.querySelector(
+        '#threestylecontainer input[type="checkbox"]'
+      ).checked;
+      const numPairsToRun = document.querySelector(
+        '#threestylecontainer input[type="number"]'
+      ).value;
+
+      shuffleArray(data);
+      setUIToTestMode();
+      testRunning = true;
+    }
+
+    window.addEventListener(
+      "keyup",
+      e => {
+        console.log(e.key);
+        if (testRunning && e.key === " ") {
+          nextTest();
+        }
+      },
+      true
+    );
+
+    function setUIToTestMode() {
+      curTestIndex = 0;
+      document
+        .querySelectorAll("#threestylecontainer .buttoncontainer > :not(span)")
+        .forEach(x => {
+          x.disabled = true;
+        });
+
+      document.querySelector(
+        "#threestylecontainer .testcontainer"
+      ).style.display = "block";
+      document.getElementById("dummyinput").focus();
+    }
+
+    function nextTest() {
+      testStart = new Date().getTime();
+      function updateTimer() {
+        const curTime = new Date().getTime();
+        document.querySelector(
+          "#threestylecontainer .testcontainer h3.timer"
+        ).innerText = ((curTime - testStart) / 1000).toFixed(3);
+      }
+      updateTimer();
+      timerTimeout = setInterval(updateTimer, 50);
+    }
+
     fetch("https://emils-api.herokuapp.com/threestyledata")
       .then(x => x.json())
-      .then(body => {
-        document.getElementById("threestyledisplay").innerText = body
-          .map(x => x.pair)
-          .reduce((prev, cur) => `${prev} ${cur}`);
-
+      .then(fetchedData => {
+        data = fetchedData;
+        displayThreeStyleData();
         document.querySelector("#threestylecontainer h4").innerText +=
-          " (" + body.length.toString() + ")";
+          " (" + fetchedData.length.toString() + ")";
         document
-          .querySelectorAll("#threestylecontainer .buttoncontainer > *")
+          .querySelectorAll(
+            "#threestylecontainer .buttoncontainer > :not(span)"
+          )
           .forEach(x => {
             x.disabled = false;
-            console.log(x.tagName);
-            if (x.tagName === "INPUT") {
+            if (x.tagName === "INPUT" && x.type === "number") {
               x.min = 1;
-              x.max = body.length;
+              x.max = fetchedData.length;
               x.value = Math.min(10, x.max);
             }
           });
       });
+
+    function displayThreeStyleData() {
+      document.getElementById("threestyledisplay").innerText = data
+        .map(x => x.pair)
+        .sort()
+        .reduce((prev, cur) => `${prev} ${cur}`);
+    }
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
   </script>
 </html>
