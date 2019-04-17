@@ -350,7 +350,9 @@
           high !== "DNF" ? high.toFixed(3) : high
         }`;
         const low = getDNF(sortedResultsInSeconds[0]);
-        resultSummary += `\nBest Time: ${low.toFixed(3)}`;
+        resultSummary += `\nBest Time: ${
+          typeof low === "string" ? low : low.toFixed(3)
+        }`;
         function getAvg(arr) {
           const normalizedArray = arr
             .sort(compareResults)
