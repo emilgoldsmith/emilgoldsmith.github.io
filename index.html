@@ -134,6 +134,7 @@
       );
 
       shuffleArray(data);
+      randomizeCycleDirections(data);
       prepTest();
     }
 
@@ -439,6 +440,17 @@
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
       }
+    }
+    function randomizeCycleDirections(data) {
+      data.forEach(x => {
+        const shouldReverse = Math.floor(Math.random() * 2) == 0;
+        if (shouldReverse) {
+          x.pair = x.pair
+            .split("")
+            .reverse()
+            .join("");
+        }
+      });
     }
   </script>
 </html>
