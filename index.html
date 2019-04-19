@@ -49,20 +49,6 @@
         outline: none;
       }
 
-      #dummyinput:focus {
-        outline: none;
-      }
-
-      #dummyinput {
-        appearance: none;
-        -moz-appearance: none;
-        -webkit-appearance: none;
-        background-color: beige;
-        border: none;
-        width: 1px;
-        height: 1px;
-      }
-
       .testcontainer .displaybox {
         margin-top: 10px;
       }
@@ -78,7 +64,6 @@
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
-    <input id="dummyinput" />
     <h1>Emil's Random Drawer of Fun Stuff</h1>
     <div class="container" id="threestylecontainer">
       <h3>3-Style Corner Random Practice Order</h3>
@@ -198,6 +183,7 @@
     }
 
     function setFormDisable(disabled) {
+      document.activeElement.blur();
       document
         .querySelectorAll("#threestylecontainer .buttoncontainer > :not(span)")
         .forEach(x => {
@@ -217,7 +203,6 @@
       document.querySelector(
         "#threestylecontainer .testcontainer"
       ).style.display = "block";
-      document.getElementById("dummyinput").focus();
     }
 
     function setTimerUI(timeInMs) {
