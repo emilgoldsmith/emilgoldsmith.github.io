@@ -1,441 +1,413 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta name="theme-color" content="#000000" />
-    <title>Emil's Random Drawer</title>
+---
+layout: default
+---
 
-    <style>
-      body {
-        background-color: beige;
-        text-align: center;
-      }
+<style>
+  .container {
+    border: 2px solid black;
+    width: 80vw;
+    margin: auto;
+  }
 
-      .container {
-        border: 2px solid black;
-        width: 80vw;
-        margin: auto;
-      }
+  .displaybox {
+    background-color: white;
+    border: 2px solid black;
+    width: 70%;
+    margin: 30px auto;
+    padding: 10px;
+  }
 
-      .displaybox {
-        background-color: white;
-        border: 2px solid black;
-        width: 70%;
-        margin: 30px auto;
-        padding: 10px;
-      }
+  .buttoncontainer {
+    margin: 10px 0;
+  }
 
-      .buttoncontainer {
-        margin: 10px 0;
-      }
+  .buttoncontainer > *:not(:first-child):not(span):not(span + input) {
+    margin-left: 20px;
+  }
 
-      .buttoncontainer > *:not(:first-child):not(span):not(span + input) {
-        margin-left: 20px;
-      }
+  .buttoncontainer > *:not(:last-child):not(span) {
+    margin-right: 20px;
+  }
 
-      .buttoncontainer > *:not(:last-child):not(span) {
-        margin-right: 20px;
-      }
+  .buttoncontainer > input[type="number"] {
+    width: 3em;
+  }
 
-      .buttoncontainer > input[type="number"] {
-        width: 3em;
-      }
+  .buttoncontainer > input[type="checkbox"]:focus {
+    outline: none;
+  }
 
-      .buttoncontainer > input[type="checkbox"]:focus {
-        outline: none;
-      }
+  .testcontainer .displaybox {
+    margin-top: 10px;
+  }
 
-      .testcontainer .displaybox {
-        margin-top: 10px;
-      }
+  .testcontainer h4 {
+    margin-bottom: 10px;
+    margin-top: 40px;
+  }
+</style>
 
-      .testcontainer h4 {
-        margin-bottom: 10px;
-        margin-top: 40px;
-      }
-    </style>
-  </head>
-
-  <body>
-    <noscript>
-      You need to enable JavaScript to run this app.
-    </noscript>
-    <h1>Emil's Random Drawer of Fun Stuff</h1>
-    <div class="container" id="threestylecontainer">
-      <h3>3-Style Corner Random Practice Order</h3>
-      <h4>Currently learned pairs</h4>
-      <div class="displaybox" id="threestyledisplay">
-        Fetching data...
-      </div>
-      <div class="buttoncontainer">
-        <span>Number of pairs to test:</span>
-        <input type="number" value="0" disabled />
-        <button disabled onclick="runTest()">Run Partial Test</button>
-        <button disabled onclick="runFullTest()">Test All</button>
-        <span>Pause between pairs</span><input type="checkbox" disabled />
-      </div>
-      <div class="testcontainer" style="display: none;">
-        <h3 class="timer">The Time For Current Pair Will Be Shown Here</h3>
-        <h3 class="curpair">The Pair being Tested Will Show Here</h3>
-        <h3 class="alg"></h3>
-        <p class="explanation">Press Space To Start Next Pair</p>
-        <div class="resultscontainer" style="display: none;">
-          <h4>Results:</h4>
-          <div class="displaybox results"></div>
-          <h5 class="resultssummary"></h5>
-        </div>
-      </div>
+<div class="container" id="threestylecontainer">
+  <h3>3-Style Corner Random Practice Order</h3>
+  <h4>Currently learned pairs</h4>
+  <div class="displaybox" id="threestyledisplay">
+    Fetching data...
+  </div>
+  <div class="buttoncontainer">
+    <span>Number of pairs to test:</span>
+    <input type="number" value="0" disabled />
+    <button disabled onclick="runTest()">Run Partial Test</button>
+    <button disabled onclick="runFullTest()">Test All</button>
+    <span>Pause between pairs</span><input type="checkbox" disabled />
+  </div>
+  <div class="testcontainer" style="display: none;">
+    <h3 class="timer">The Time For Current Pair Will Be Shown Here</h3>
+    <h3 class="curpair">The Pair being Tested Will Show Here</h3>
+    <h3 class="alg"></h3>
+    <p class="explanation">Press Space To Start Next Pair</p>
+    <div class="resultscontainer" style="display: none;">
+      <h4>Results:</h4>
+      <div class="displaybox results"></div>
+      <h5 class="resultssummary"></h5>
     </div>
-  </body>
-  <script type="text/javascript">
-    let data = null;
-    let curTestIndex = 0;
-    let timerTimeout = null;
-    let testStart = null;
-    let results = [];
-    const states = {
-      NOT_RUNNING: 0,
-      RUNNING: 1,
-      IN_BETWEEN: 2,
-      BEFORE_START: 3,
-      AWAITING_VERDICT: 4,
-      FINISHED: 5
-    };
-    let testState = states.NOT_RUNNING;
-    let pauseBetween = null;
-    let numPairsToRun = null;
+  </div>
+</div>
+<script type="text/javascript">
+  let data = null;
+  let curTestIndex = 0;
+  let timerTimeout = null;
+  let testStart = null;
+  let results = [];
+  const states = {
+    NOT_RUNNING: 0,
+    RUNNING: 1,
+    IN_BETWEEN: 2,
+    BEFORE_START: 3,
+    AWAITING_VERDICT: 4,
+    FINISHED: 5
+  };
+  let testState = states.NOT_RUNNING;
+  let pauseBetween = null;
+  let numPairsToRun = null;
 
-    function runTest() {
-      pauseBetween = document.querySelector(
-        '#threestylecontainer input[type="checkbox"]'
-      ).checked;
-      numPairsToRun = Number(
-        document.querySelector('#threestylecontainer input[type="number"]')
-          .value
-      );
-
-      shuffleArray(data);
-      randomizeCycleDirections(data);
-      prepTest();
-    }
-
-    function runFullTest() {
-      document.querySelector(
-        '#threestylecontainer input[type="number"]'
-      ).value = data.length;
-      runTest();
-    }
-
-    function validateAlgorithmFormat(algorithm) {
-      const oneTurn = String.raw`[ULFRDB]2?'?`;
-      const mainPart = String.raw`\[(?:${oneTurn} )+, (?:${oneTurn} )*(?:${oneTurn})\]`;
-      const suffix = String.raw` \(\d+\)`;
-      const rotations = String.raw`[xyz]'?`;
-      const withSetup = String.raw`\[(?:${oneTurn} |${rotations} )+; ${mainPart}\]`;
-      const toReg = x => new RegExp(x);
-      const simple = toReg(`^${mainPart}${suffix}$`);
-      const complex = toReg(`^${withSetup}${suffix}$`);
-      return simple.test(algorithm) || complex.test(algorithm);
-    }
-
-    window.addEventListener(
-      "keyup",
-      e => {
-        if (e.key === " ") {
-          if (
-            testState === states.IN_BETWEEN ||
-            testState === states.BEFORE_START
-          )
-            nextTest();
-          else if (testState === states.RUNNING) stopTest();
-        }
-        if (testState === states.AWAITING_VERDICT) {
-          if (e.key === "c") {
-            judgeResult(true);
-            addResult();
-          } else if (e.key === "w") {
-            judgeResult(false);
-            addResult();
-          } else if (e.key === "s") {
-            showAlg();
-          }
-        }
-      },
-      true
+  function runTest() {
+    pauseBetween = document.querySelector(
+      '#threestylecontainer input[type="checkbox"]'
+    ).checked;
+    numPairsToRun = Number(
+      document.querySelector('#threestylecontainer input[type="number"]').value
     );
 
-    const explanationTypes = {
-      PAUSED: "Press Space To Start Next Pair",
-      VERDICT:
-        "Press C for correct, W for wrong and S for showing the correct algorithm (do this before judging the attempt)",
-      RUNNING: "Press Space When Finished",
-      FINISHED: "The Test Is Over"
-    };
+    shuffleArray(data);
+    randomizeCycleDirections(data);
+    prepTest();
+  }
 
-    function setExplanation(text) {
-      document.querySelector(
-        "#threestylecontainer .testcontainer .explanation"
-      ).innerText = text;
+  function runFullTest() {
+    document.querySelector('#threestylecontainer input[type="number"]').value =
+      data.length;
+    runTest();
+  }
+
+  function validateAlgorithmFormat(algorithm) {
+    const oneTurn = String.raw`[ULFRDB]2?'?`;
+    const mainPart = String.raw`\[(?:${oneTurn} )+, (?:${oneTurn} )*(?:${oneTurn})\]`;
+    const suffix = String.raw` \(\d+\)`;
+    const rotations = String.raw`[xyz]'?`;
+    const withSetup = String.raw`\[(?:${oneTurn} |${rotations} )+; ${mainPart}\]`;
+    const toReg = x => new RegExp(x);
+    const simple = toReg(`^${mainPart}${suffix}$`);
+    const complex = toReg(`^${withSetup}${suffix}$`);
+    return simple.test(algorithm) || complex.test(algorithm);
+  }
+
+  window.addEventListener(
+    "keyup",
+    e => {
+      if (e.key === " ") {
+        if (
+          testState === states.IN_BETWEEN ||
+          testState === states.BEFORE_START
+        )
+          nextTest();
+        else if (testState === states.RUNNING) stopTest();
+      }
+      if (testState === states.AWAITING_VERDICT) {
+        if (e.key === "c") {
+          judgeResult(true);
+          addResult();
+        } else if (e.key === "w") {
+          judgeResult(false);
+          addResult();
+        } else if (e.key === "s") {
+          showAlg();
+        }
+      }
+    },
+    true
+  );
+
+  const explanationTypes = {
+    PAUSED: "Press Space To Start Next Pair",
+    VERDICT:
+      "Press C for correct, W for wrong and S for showing the correct algorithm (do this before judging the attempt)",
+    RUNNING: "Press Space When Finished",
+    FINISHED: "The Test Is Over"
+  };
+
+  function setExplanation(text) {
+    document.querySelector(
+      "#threestylecontainer .testcontainer .explanation"
+    ).innerText = text;
+  }
+
+  function setFormDisable(disabled) {
+    document.activeElement.blur();
+    document
+      .querySelectorAll("#threestylecontainer .buttoncontainer > :not(span)")
+      .forEach(x => {
+        x.disabled = disabled;
+      });
+  }
+
+  function prepTest() {
+    curTestIndex = 0;
+    testState = states.BEFORE_START;
+    setExplanation(explanationTypes.PAUSED);
+    results = [];
+
+    setFormDisable(true);
+    setResults("");
+
+    document.querySelector(
+      "#threestylecontainer .testcontainer"
+    ).style.display = "block";
+  }
+
+  function setTimerUI(timeInMs) {
+    document.querySelector(
+      "#threestylecontainer .testcontainer h3.timer"
+    ).innerText = (timeInMs / 1000).toFixed(3);
+  }
+
+  function setPairUI(pair) {
+    document.querySelector(
+      "#threestylecontainer .testcontainer h3.curpair"
+    ).innerText = pair;
+  }
+
+  function nextTest() {
+    testState = states.RUNNING;
+    testStart = new Date().getTime();
+    function updateTimer() {
+      const curTime = new Date().getTime();
+      setTimerUI(curTime - testStart);
     }
+    updateTimer();
+    timerTimeout = setInterval(updateTimer, 50);
+    setPairUI(data[curTestIndex].pair);
+    setExplanation(explanationTypes.RUNNING);
+  }
 
-    function setFormDisable(disabled) {
-      document.activeElement.blur();
+  function getResults() {
+    return document.querySelector(
+      "#threestylecontainer .testcontainer .resultscontainer .results"
+    ).innerText;
+  }
+
+  function setResults(text) {
+    const node = document.querySelector(
+      "#threestylecontainer .testcontainer .resultscontainer .results"
+    );
+    node.innerText = text;
+    if (text === "")
+      document.querySelector(
+        "#threestylecontainer .testcontainer .resultscontainer"
+      ).style.display = "none";
+    updateResults();
+  }
+
+  function showAlg() {
+    document.querySelector(
+      "#threestylecontainer .testcontainer h3.alg"
+    ).innerText = results[curTestIndex - 1].alg;
+  }
+
+  function hideAlg() {
+    document.querySelector(
+      "#threestylecontainer .testcontainer h3.alg"
+    ).innerText = "";
+  }
+
+  function addResult() {
+    hideAlg();
+    const result = results[results.length - 1];
+    const prevValue = getResults();
+    setResults(
+      `${prevValue}${prevValue ? "\n" : ""}${curTestIndex}. ${result.pair}: ${(
+        result.time / 1000
+      ).toFixed(3)} - ${result.verdict}`
+    );
+    if (curTestIndex === 1)
+      document.querySelector(
+        "#threestylecontainer .testcontainer .resultscontainer"
+      ).style.display = "block";
+    if (curTestIndex === numPairsToRun) completeTest();
+    else if (pauseBetween) {
+      setExplanation(explanationTypes.PAUSED);
+      testState = states.IN_BETWEEN;
+    } else nextTest();
+  }
+
+  function judgeResult(isCorrect) {
+    const verdict = isCorrect ? "Correct" : "Wrong";
+    results[results.length - 1].verdict = verdict;
+  }
+
+  function stopTest() {
+    testState = states.AWAITING_VERDICT;
+    const curTime = new Date().getTime();
+    const testResult = curTime - testStart;
+    clearTimeout(timerTimeout);
+    setTimerUI(testResult);
+    setExplanation(explanationTypes.VERDICT);
+    results.push({ ...data[curTestIndex], time: testResult });
+    curTestIndex++;
+  }
+
+  function completeTest() {
+    testState = states.FINISHED;
+    setFormDisable(false);
+    setExplanation(explanationTypes.FINISHED);
+  }
+
+  function updateResults() {
+    let resultSummary = "";
+    if (results.length > 0) {
+      const resultsInSeconds = results.map(x => ({
+        ...x,
+        time: x.time / 1000
+      }));
+
+      function mean(arr) {
+        return arr.reduce((sum, cur) => sum + cur.time, 0) / arr.length;
+      }
+
+      const meanWithoutVerdict = mean(resultsInSeconds);
+      resultSummary = `Mean (including DNF): ${meanWithoutVerdict.toFixed(3)}`;
+      const meanOfCorrect = mean(
+        resultsInSeconds.filter(x => x.verdict === "Correct")
+      );
+      resultSummary += `\nMean (excluding DNF): ${meanOfCorrect.toFixed(3)}`;
+      const sortedResultsInSeconds = [...resultsInSeconds];
+      function compareResults(a, b) {
+        if (a.verdict === "Wrong" && b.verdict === "Wrong") return 0;
+        if (a.verdict === "Wrong") return 1;
+        if (b.verdict === "Wrong") return -1;
+        return a.time - b.time;
+      }
+      sortedResultsInSeconds.sort(compareResults);
+      const getDNF = res => (res.verdict === "Wrong" ? "DNF" : res.time);
+      const high = getDNF(sortedResultsInSeconds[results.length - 1]);
+      resultSummary += `\nWorst Time: ${
+        high !== "DNF" ? high.toFixed(3) : high
+      }`;
+      const low = getDNF(sortedResultsInSeconds[0]);
+      resultSummary += `\nBest Time: ${
+        typeof low === "string" ? low : low.toFixed(3)
+      }`;
+      function getAvg(arr) {
+        const normalizedArray = arr
+          .sort(compareResults)
+          .slice(1, arr.length - 1);
+        let result = normalizedArray.map(getDNF).find(x => x === "DNF");
+        if (result === undefined) {
+          result = mean(normalizedArray);
+        }
+        return result;
+      }
+      function getBestAverageString(sizeToAvg) {
+        const bestAvg = resultsInSeconds.reduce((prev, cur, index) => {
+          if (index < sizeToAvg - 1) return prev;
+          const avg = getAvg(
+            resultsInSeconds.slice(index - sizeToAvg + 1, index + 1)
+          );
+          if (
+            prev === null ||
+            (typeof avg === "number" && typeof prev === "string") ||
+            (typeof avg === "number" && typeof prev === "number" && avg < prev)
+          )
+            return avg;
+          return prev;
+        }, null);
+        return `\nBest Average of ${sizeToAvg}: ${
+          typeof bestAvg === "number" ? bestAvg.toFixed(3) : bestAvg
+        }`;
+      }
+      if (results.length >= 5) {
+        resultSummary += getBestAverageString(5);
+      }
+      if (results.length >= 12) {
+        resultSummary += getBestAverageString(12);
+      }
+      if (results.length >= 100) {
+        resultSummary += getBestAverageString(100);
+      }
+    }
+    document.querySelector(
+      "#threestylecontainer .testcontainer .resultscontainer h5.resultssummary"
+    ).innerText = resultSummary;
+  }
+
+  fetch("https://emils-api.herokuapp.com/threestyledata")
+    .then(x => x.json())
+    .then(fetchedData => {
+      data = fetchedData;
+      const invalidAlgorithms = data.filter(
+        x => !validateAlgorithmFormat(x.alg)
+      );
+      if (invalidAlgorithms.length > 0) {
+        window.alert(
+          "You have invalid algorithms: " +
+            invalidAlgorithms.map(x => `${x.pair}: ${x.alg}`).join(", ")
+        );
+      }
+      displayThreeStyleData();
+      document.querySelector("#threestylecontainer h4").innerText +=
+        " (" + fetchedData.length.toString() + ")";
       document
         .querySelectorAll("#threestylecontainer .buttoncontainer > :not(span)")
         .forEach(x => {
-          x.disabled = disabled;
-        });
-    }
-
-    function prepTest() {
-      curTestIndex = 0;
-      testState = states.BEFORE_START;
-      setExplanation(explanationTypes.PAUSED);
-      results = [];
-
-      setFormDisable(true);
-      setResults("");
-
-      document.querySelector(
-        "#threestylecontainer .testcontainer"
-      ).style.display = "block";
-    }
-
-    function setTimerUI(timeInMs) {
-      document.querySelector(
-        "#threestylecontainer .testcontainer h3.timer"
-      ).innerText = (timeInMs / 1000).toFixed(3);
-    }
-
-    function setPairUI(pair) {
-      document.querySelector(
-        "#threestylecontainer .testcontainer h3.curpair"
-      ).innerText = pair;
-    }
-
-    function nextTest() {
-      testState = states.RUNNING;
-      testStart = new Date().getTime();
-      function updateTimer() {
-        const curTime = new Date().getTime();
-        setTimerUI(curTime - testStart);
-      }
-      updateTimer();
-      timerTimeout = setInterval(updateTimer, 50);
-      setPairUI(data[curTestIndex].pair);
-      setExplanation(explanationTypes.RUNNING);
-    }
-
-    function getResults() {
-      return document.querySelector(
-        "#threestylecontainer .testcontainer .resultscontainer .results"
-      ).innerText;
-    }
-
-    function setResults(text) {
-      const node = document.querySelector(
-        "#threestylecontainer .testcontainer .resultscontainer .results"
-      );
-      node.innerText = text;
-      if (text === "")
-        document.querySelector(
-          "#threestylecontainer .testcontainer .resultscontainer"
-        ).style.display = "none";
-      updateResults();
-    }
-
-    function showAlg() {
-      document.querySelector(
-        "#threestylecontainer .testcontainer h3.alg"
-      ).innerText = results[curTestIndex - 1].alg;
-    }
-
-    function hideAlg() {
-      document.querySelector(
-        "#threestylecontainer .testcontainer h3.alg"
-      ).innerText = "";
-    }
-
-    function addResult() {
-      hideAlg();
-      const result = results[results.length - 1];
-      const prevValue = getResults();
-      setResults(
-        `${prevValue}${prevValue ? "\n" : ""}${curTestIndex}. ${
-          result.pair
-        }: ${(result.time / 1000).toFixed(3)} - ${result.verdict}`
-      );
-      if (curTestIndex === 1)
-        document.querySelector(
-          "#threestylecontainer .testcontainer .resultscontainer"
-        ).style.display = "block";
-      if (curTestIndex === numPairsToRun) completeTest();
-      else if (pauseBetween) {
-        setExplanation(explanationTypes.PAUSED);
-        testState = states.IN_BETWEEN;
-      } else nextTest();
-    }
-
-    function judgeResult(isCorrect) {
-      const verdict = isCorrect ? "Correct" : "Wrong";
-      results[results.length - 1].verdict = verdict;
-    }
-
-    function stopTest() {
-      testState = states.AWAITING_VERDICT;
-      const curTime = new Date().getTime();
-      const testResult = curTime - testStart;
-      clearTimeout(timerTimeout);
-      setTimerUI(testResult);
-      setExplanation(explanationTypes.VERDICT);
-      results.push({ ...data[curTestIndex], time: testResult });
-      curTestIndex++;
-    }
-
-    function completeTest() {
-      testState = states.FINISHED;
-      setFormDisable(false);
-      setExplanation(explanationTypes.FINISHED);
-    }
-
-    function updateResults() {
-      let resultSummary = "";
-      if (results.length > 0) {
-        const resultsInSeconds = results.map(x => ({
-          ...x,
-          time: x.time / 1000
-        }));
-
-        function mean(arr) {
-          return arr.reduce((sum, cur) => sum + cur.time, 0) / arr.length;
-        }
-
-        const meanWithoutVerdict = mean(resultsInSeconds);
-        resultSummary = `Mean (including DNF): ${meanWithoutVerdict.toFixed(
-          3
-        )}`;
-        const meanOfCorrect = mean(
-          resultsInSeconds.filter(x => x.verdict === "Correct")
-        );
-        resultSummary += `\nMean (excluding DNF): ${meanOfCorrect.toFixed(3)}`;
-        const sortedResultsInSeconds = [...resultsInSeconds];
-        function compareResults(a, b) {
-          if (a.verdict === "Wrong" && b.verdict === "Wrong") return 0;
-          if (a.verdict === "Wrong") return 1;
-          if (b.verdict === "Wrong") return -1;
-          return a.time - b.time;
-        }
-        sortedResultsInSeconds.sort(compareResults);
-        const getDNF = res => (res.verdict === "Wrong" ? "DNF" : res.time);
-        const high = getDNF(sortedResultsInSeconds[results.length - 1]);
-        resultSummary += `\nWorst Time: ${
-          high !== "DNF" ? high.toFixed(3) : high
-        }`;
-        const low = getDNF(sortedResultsInSeconds[0]);
-        resultSummary += `\nBest Time: ${
-          typeof low === "string" ? low : low.toFixed(3)
-        }`;
-        function getAvg(arr) {
-          const normalizedArray = arr
-            .sort(compareResults)
-            .slice(1, arr.length - 1);
-          let result = normalizedArray.map(getDNF).find(x => x === "DNF");
-          if (result === undefined) {
-            result = mean(normalizedArray);
+          x.disabled = false;
+          if (x.tagName === "INPUT" && x.type === "number") {
+            x.min = 1;
+            x.max = fetchedData.length;
+            x.value = Math.min(10, x.max);
           }
-          return result;
-        }
-        function getBestAverageString(sizeToAvg) {
-          const bestAvg = resultsInSeconds.reduce((prev, cur, index) => {
-            if (index < sizeToAvg - 1) return prev;
-            const avg = getAvg(
-              resultsInSeconds.slice(index - sizeToAvg + 1, index + 1)
-            );
-            if (
-              prev === null ||
-              (typeof avg === "number" && typeof prev === "string") ||
-              (typeof avg === "number" &&
-                typeof prev === "number" &&
-                avg < prev)
-            )
-              return avg;
-            return prev;
-          }, null);
-          return `\nBest Average of ${sizeToAvg}: ${
-            typeof bestAvg === "number" ? bestAvg.toFixed(3) : bestAvg
-          }`;
-        }
-        if (results.length >= 5) {
-          resultSummary += getBestAverageString(5);
-        }
-        if (results.length >= 12) {
-          resultSummary += getBestAverageString(12);
-        }
-        if (results.length >= 100) {
-          resultSummary += getBestAverageString(100);
-        }
-      }
-      document.querySelector(
-        "#threestylecontainer .testcontainer .resultscontainer h5.resultssummary"
-      ).innerText = resultSummary;
-    }
+        });
+    });
 
-    fetch("https://emils-api.herokuapp.com/threestyledata")
-      .then(x => x.json())
-      .then(fetchedData => {
-        data = fetchedData;
-        const invalidAlgorithms = data.filter(
-          x => !validateAlgorithmFormat(x.alg)
-        );
-        if (invalidAlgorithms.length > 0) {
-          window.alert(
-            "You have invalid algorithms: " +
-              invalidAlgorithms.map(x => `${x.pair}: ${x.alg}`).join(", ")
-          );
-        }
-        displayThreeStyleData();
-        document.querySelector("#threestylecontainer h4").innerText +=
-          " (" + fetchedData.length.toString() + ")";
-        document
-          .querySelectorAll(
-            "#threestylecontainer .buttoncontainer > :not(span)"
-          )
-          .forEach(x => {
-            x.disabled = false;
-            if (x.tagName === "INPUT" && x.type === "number") {
-              x.min = 1;
-              x.max = fetchedData.length;
-              x.value = Math.min(10, x.max);
-            }
-          });
-      });
-
-    function displayThreeStyleData() {
-      document.getElementById("threestyledisplay").innerText = data
-        .map(x => x.pair)
-        .sort()
-        .reduce((prev, cur) => `${prev} ${cur}`);
+  function displayThreeStyleData() {
+    document.getElementById("threestyledisplay").innerText = data
+      .map(x => x.pair)
+      .sort()
+      .reduce((prev, cur) => `${prev} ${cur}`);
+  }
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
-    function shuffleArray(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+  }
+  function randomizeCycleDirections(data) {
+    data.forEach(x => {
+      const shouldReverse = Math.floor(Math.random() * 2) == 0;
+      if (shouldReverse) {
+        x.pair = x.pair
+          .split("")
+          .reverse()
+          .join("");
       }
-    }
-    function randomizeCycleDirections(data) {
-      data.forEach(x => {
-        const shouldReverse = Math.floor(Math.random() * 2) == 0;
-        if (shouldReverse) {
-          x.pair = x.pair
-            .split("")
-            .reverse()
-            .join("");
-        }
-      });
-    }
-  </script>
-</html>
+    });
+  }
+</script>
