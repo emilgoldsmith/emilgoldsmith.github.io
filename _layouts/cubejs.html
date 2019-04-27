@@ -1,0 +1,23 @@
+---
+layout: default
+extraHead: >
+  <script src="assets/cubejs/cube.js"></script>
+  <script src="assets/cubejs/solve.js"></script>
+  <script src="assets/cubejs/async.js"></script>
+---
+
+<style>
+  #cubeSolverState {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: red;
+    padding: 10px;
+    padding-right: 30px;
+  }
+</style>
+<div id="cubeSolverState">Cube Software Initializing</div>
+<div id="smallHack" style="position:fixed">.</div>
+{{ content }}
+
+<script src="assets/cubeInit.js"></script>

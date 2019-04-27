@@ -22,6 +22,11 @@
 #   Google search results) and in your feed.xml site description.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://emilgoldsmith.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "cubejs"
 # twitter_username: jekyllrb
 # github_username:  jekyll
 
