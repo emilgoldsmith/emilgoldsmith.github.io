@@ -15,9 +15,19 @@ extraHead: >
     padding: 10px;
     padding-right: 30px;
   }
+
+  #scrambleContainer {
+    display: none;
+  }
 </style>
 <div id="cubeSolverState">Cube Software Initializing</div>
 <div id="smallHack" style="position:fixed">.</div>
-{{ content }}
 
+<div id="scrambleContainer" class="container">
+  <h2>Scramble Box</h2>
+  <h2 id="scrambleText">temp</h2>
+  <img /><img />
+</div>
 <script src="assets/cubeInit.js"></script>
+<script src="assets/cubeFunctions.js"></script>
+{{ content }}

@@ -2,6 +2,13 @@ const node = document.getElementById("smallHack");
 const dotWidth = node.getBoundingClientRect().width;
 node.remove();
 
+const cubeQueue = [];
+let cubeInitialized = false;
+function executeCubeFn(f) {
+  if (cubeInitialized) f();
+  else cubeQueue.push(f);
+}
+
 const loadingInterval = setInterval(() => {
   const node = document.getElementById("cubeSolverState");
   const style =
@@ -21,9 +28,11 @@ const loadingInterval = setInterval(() => {
 }, 400);
 
 Cube.asyncInit("assets/cubejs/worker.js", function() {
+  cubeInitialized = true;
   clearInterval(loadingInterval);
   const node = document.getElementById("cubeSolverState");
   node.style.backgroundColor = "green";
   node.innerText = "Cube Software Initialized";
   setTimeout(() => node.remove(), 3000);
+  cubeQueue.forEach(f => f());
 });
