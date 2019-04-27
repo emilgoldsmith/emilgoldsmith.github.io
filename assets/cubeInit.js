@@ -1,6 +1,8 @@
-const node = document.getElementById("smallHack");
-const dotWidth = node.getBoundingClientRect().width;
-node.remove();
+// Make the block constant size
+const node = document.getElementById("cubeSolverState");
+const padding = document.defaultView.getComputedStyle(node).padding.slice(0, 2);
+const paddingSize = Number(padding.slice(0, 2)) || Number(padding.slice(0, 1));
+node.style.width = `${node.getBoundingClientRect().width - 2 * paddingSize}px`;
 
 const cubeQueue = [];
 let cubeInitialized = false;
@@ -11,18 +13,12 @@ function executeCubeFn(f) {
 
 const loadingInterval = setInterval(() => {
   const node = document.getElementById("cubeSolverState");
-  const style =
-    node.style.paddingRight ||
-    document.defaultView.getComputedStyle(node)["padding-right"];
-  const rightPadding = Number(style.slice(0, 2)) || Number(style.slice(0, 1));
   const text = node.innerText;
   let newText;
   if (text.slice(text.length - 3) === "...") {
     newText = text.slice(0, text.length - 3);
-    node.style.paddingRight = `${rightPadding + 3 * dotWidth}px`;
   } else {
     newText = text + ".";
-    node.style.paddingRight = `${rightPadding - dotWidth}px`;
   }
   node.innerText = newText;
 }, 400);
