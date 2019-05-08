@@ -51,15 +51,21 @@
   </head>
   <body>
     <nav>
-      <a href="/" class="active">3BLD</a>
+      <a href="/3bld">3BLD</a>
       <a href="/cross-blockbuilding">Cross / BlockBuilding</a>
     </nav>
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
     <section class="main-content">
-      <h1>Emil's Random Drawer of Fun Stuff</h1>
       {{ content }}
     </section>
+    <script>
+      document.querySelectorAll("nav a").forEach(x => {
+        if (x.pathname === window.location.pathname) {
+          x.classList.add("active");
+        }
+      });
+    </script>
   </body>
 </html>
