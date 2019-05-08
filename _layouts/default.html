@@ -12,16 +12,54 @@
         background-color: beige;
         text-align: center;
       }
+
+      .main-content {
+        border: 1px solid black;
+        border-radius: 0px 0px 3px 3px;
+        margin-top: -1px;
+        padding-bottom: 50px;
+      }
+
+      nav {
+        padding-top: 10px;
+        display: flex;
+      }
+      nav a {
+        flex-grow: 1;
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        outline: none;
+        padding-top: 6px;
+        padding-bottom: 3px;
+        /* Don't make it visible unless selected / hovered over */
+        border: 1px solid transparent;
+        border-radius: 3px 3px 0 0;
+      }
+      nav a.active,
+      nav a:hover {
+        border-color: black black beige black;
+      }
+
+      nav a:hover:not(.active) {
+        border-color: black;
+      }
     </style>
     {{
       layout.extraHead
     }}
   </head>
   <body>
-    <h1>Emil's Random Drawer of Fun Stuff</h1>
+    <nav>
+      <a href="/" class="active">3BLD</a>
+      <a href="/cross-blockbuilding">Cross / BlockBuilding</a>
+    </nav>
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
-    {{ content }}
+    <section class="main-content">
+      <h1>Emil's Random Drawer of Fun Stuff</h1>
+      {{ content }}
+    </section>
   </body>
 </html>
