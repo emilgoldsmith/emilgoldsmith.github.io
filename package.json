@@ -5,6 +5,8 @@
     "request-promise-native": "^1.0.7"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "bundle exec jekyll serve",
+    "clean": "bundle exec jekyll clean"
   }
 }
