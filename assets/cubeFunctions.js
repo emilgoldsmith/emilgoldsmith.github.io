@@ -20,3 +20,5 @@ function displayScramble(alg) {
   imageTags[0].src = baseUrl;
   imageTags[1].src = `${baseUrl}x2y'`;
 }
+
+executeCubeFn(() => getScramble().then(displayScramble));
