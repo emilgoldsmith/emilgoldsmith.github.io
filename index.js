@@ -27,8 +27,8 @@ app.get("/threestyledata", (req, res) => {
         else if (body[j] === "}") depth--;
         stringifiedData += body[j];
       }
-      data = JSON.parse(stringifiedData)
-        .changes.firstchunk[0][1][4].map(x => x[3][2])
+      data = JSON.parse(JSON.parse(stringifiedData)
+        .changes.firstchunk[0][1])[3].map(x => x[0][3][1])
         .slice(2)
         .reduce((prev, cur, index, arr) => {
           if (index % 2 == 0) {
