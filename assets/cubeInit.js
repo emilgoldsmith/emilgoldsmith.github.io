@@ -7,8 +7,8 @@ node.style.width = `${node.getBoundingClientRect().width - 2 * paddingSize}px`;
 const cubeQueue = [];
 let cubeInitialized = false;
 function executeCubeFn(f) {
-  if (cubeInitialized) f();
-  else cubeQueue.push(f);
+  if (cubeInitialized) return Promise.resolve(f());
+  else return new Promise(resolve => cubeQueue.push({ function: f, resolve }));
 }
 
 const loadingInterval = setInterval(() => {
@@ -30,5 +30,5 @@ Cube.asyncInit("assets/cubejs/worker.js", function() {
   node.style.backgroundColor = "green";
   node.innerText = "Cube Software Initialized";
   setTimeout(() => node.remove(), 3000);
-  cubeQueue.forEach(f => f());
+  cubeQueue.forEach(obj => obj.resolve(obj.function()));
 });

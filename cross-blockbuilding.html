@@ -1,3 +1,71 @@
 ---
 permalink: /cross-blockbuilding
 ---
+
+<script>
+  const moves = {
+    turnTypes: ["", "'", "2"],
+    faces: ["U", "D", "F", "R", "B", "L"]
+  };
+
+  executeCubeFn(() => getScramble())
+    .then(scramble => {
+      displayScramble(scramble);
+      return scramble;
+    })
+    .then(scramble => {
+      const maxDepth = 7;
+      const cube = new Cube();
+      cube.move(scramble);
+      const getOppositeFace = f => {
+        if (f === "U") return "D";
+        if (f === "D") return "F";
+        if (f === "F") return "B";
+        if (f === "B") return "F";
+        if (f === "R") return "L";
+        return "R";
+      };
+      // Thoughts about pruning and evaluations:
+      /**
+       * Pruning: We can prune any move that was made in the last move or if the last two moves
+       * were of opposite faces then you can also prune the opposite face.
+       * One can also prune any move that in terms of relevant pieces does not do anything
+       * different from last time it was moved.
+       * Beware that of course these prunings could not be worth their computation time
+       */
+      /**
+       * Evaluation: Do upper and lower bounds, especially for cross you can
+       * probably do some easy things working with good and bad edges.
+       * You can of course base your evaluation on either the lower or upper bound
+       * or you can also take into consideration the number of "groups" of pieces you have,
+       * thinking about for example edges permuted correctly according to each other in the
+       * last layer, or 2x2x1 blocks of corners and edges etc. of the pieces you are
+       * trying to solve.
+       *
+       * Again it could be more work than it's worth implementing some of these things
+       */
+      function search(movesMade = []) {
+        if (movesMade.length === maxDepth) {
+          return;
+        }
+        const possibleFaces = moves.faces.filter(
+          x =>
+            !(
+              movesMade.length > 0 &&
+              (movesMade[movesMade.length - 1][0] === x ||
+                getOppositeFace(movesMade[movesMade.length - 1][0]) === x)
+            )
+        );
+        if (movesMade.length > 2) console.log(possibleFaces);
+        possibleFaces.forEach(face =>
+          moves.turnTypes.forEach(type => search(movesMade.concat([face])))
+        );
+      }
+      const startTime = new Date().getTime();
+      search();
+      const endTime = new Date().getTime();
+      const totalTime = endTime - startTime;
+      const timeInSeconds = totalTime / 1000;
+      console.log(`Depth ${maxDepth} finished in ${timeInSeconds} seconds`);
+    });
+</script>
