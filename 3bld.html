@@ -113,9 +113,10 @@ redirect_from:
 
   function validateAlgorithmFormat(algorithm) {
     const oneTurn = String.raw`[ULFRDB]2?'?`;
-    const mainPart = String.raw`\[(?:${oneTurn} )+, (?:${oneTurn} )*(?:${oneTurn})\]`;
+    const mainPart = String.raw`\[(?:${oneTurn} )*(?:${oneTurn}), (?:${oneTurn} )*(?:${oneTurn})\]`;
     const rotations = String.raw`[xyz]'?`;
     const withSetup = String.raw`\[(?:${oneTurn} |${rotations} )*(?:${oneTurn}|${rotations}): ${mainPart}\]`;
+    console.log(withSetup);
     const toReg = (x) => new RegExp(x);
     const simple = toReg(`^${mainPart}$`);
     const complex = toReg(`^${withSetup}$`);
