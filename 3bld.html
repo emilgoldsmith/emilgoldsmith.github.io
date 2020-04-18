@@ -86,7 +86,7 @@ redirect_from:
     IN_BETWEEN: 2,
     BEFORE_START: 3,
     AWAITING_VERDICT: 4,
-    FINISHED: 5
+    FINISHED: 5,
   };
   let testState = states.NOT_RUNNING;
   let pauseBetween = null;
@@ -114,18 +114,17 @@ redirect_from:
   function validateAlgorithmFormat(algorithm) {
     const oneTurn = String.raw`[ULFRDB]2?'?`;
     const mainPart = String.raw`\[(?:${oneTurn} )+, (?:${oneTurn} )*(?:${oneTurn})\]`;
-    const suffix = String.raw` \(\d+\)`;
     const rotations = String.raw`[xyz]'?`;
-    const withSetup = String.raw`\[(?:${oneTurn} |${rotations} )+; ${mainPart}\]`;
-    const toReg = x => new RegExp(x);
-    const simple = toReg(`^${mainPart}${suffix}$`);
-    const complex = toReg(`^${withSetup}${suffix}$`);
+    const withSetup = String.raw`\[(?:${oneTurn} |${rotations} )*(?:${oneTurn}|${rotations}): ${mainPart}\]`;
+    const toReg = (x) => new RegExp(x);
+    const simple = toReg(`^${mainPart}$`);
+    const complex = toReg(`^${withSetup}$`);
     return simple.test(algorithm) || complex.test(algorithm);
   }
 
   window.addEventListener(
     "keyup",
-    e => {
+    (e) => {
       if (e.key === " ") {
         if (
           testState === states.IN_BETWEEN ||
@@ -154,7 +153,7 @@ redirect_from:
     VERDICT:
       "Press C for correct, W for wrong and S for showing the correct algorithm (do this before judging the attempt)",
     RUNNING: "Press Space When Finished",
-    FINISHED: "The Test Is Over"
+    FINISHED: "The Test Is Over",
   };
 
   function setExplanation(text) {
@@ -167,7 +166,7 @@ redirect_from:
     document.activeElement.blur();
     document
       .querySelectorAll("#threestylecontainer .buttoncontainer > :not(span)")
-      .forEach(x => {
+      .forEach((x) => {
         x.disabled = disabled;
       });
   }
@@ -286,9 +285,9 @@ redirect_from:
   function updateResults() {
     let resultSummary = "";
     if (results.length > 0) {
-      const resultsInSeconds = results.map(x => ({
+      const resultsInSeconds = results.map((x) => ({
         ...x,
-        time: x.time / 1000
+        time: x.time / 1000,
       }));
 
       function mean(arr) {
@@ -298,7 +297,7 @@ redirect_from:
       const meanWithoutVerdict = mean(resultsInSeconds);
       resultSummary = `Mean (including DNF): ${meanWithoutVerdict.toFixed(3)}`;
       const meanOfCorrect = mean(
-        resultsInSeconds.filter(x => x.verdict === "Correct")
+        resultsInSeconds.filter((x) => x.verdict === "Correct")
       );
       resultSummary += `\nMean (excluding DNF): ${meanOfCorrect.toFixed(3)}`;
       const sortedResultsInSeconds = [...resultsInSeconds];
@@ -309,7 +308,7 @@ redirect_from:
         return a.time - b.time;
       }
       sortedResultsInSeconds.sort(compareResults);
-      const getDNF = res => (res.verdict === "Wrong" ? "DNF" : res.time);
+      const getDNF = (res) => (res.verdict === "Wrong" ? "DNF" : res.time);
       const high = getDNF(sortedResultsInSeconds[results.length - 1]);
       resultSummary += `\nWorst Time: ${
         high !== "DNF" ? high.toFixed(3) : high
@@ -322,7 +321,7 @@ redirect_from:
         const normalizedArray = arr
           .sort(compareResults)
           .slice(1, arr.length - 1);
-        let result = normalizedArray.map(getDNF).find(x => x === "DNF");
+        let result = normalizedArray.map(getDNF).find((x) => x === "DNF");
         if (result === undefined) {
           result = mean(normalizedArray);
         }
@@ -362,16 +361,16 @@ redirect_from:
   }
 
   fetch("https://emils-api.herokuapp.com/threestyledata")
-    .then(x => x.json())
-    .then(fetchedData => {
+    .then((x) => x.json())
+    .then((fetchedData) => {
       data = fetchedData;
       const invalidAlgorithms = data.filter(
-        x => !validateAlgorithmFormat(x.alg)
+        (x) => !validateAlgorithmFormat(x.alg)
       );
       if (invalidAlgorithms.length > 0) {
         window.alert(
           "You have invalid algorithms: " +
-            invalidAlgorithms.map(x => `${x.pair}: ${x.alg}`).join(", ")
+            invalidAlgorithms.map((x) => `${x.pair}: ${x.alg}`).join(", ")
         );
       }
       displayThreeStyleData();
@@ -379,7 +378,7 @@ redirect_from:
         " (" + fetchedData.length.toString() + ")";
       document
         .querySelectorAll("#threestylecontainer .buttoncontainer > :not(span)")
-        .forEach(x => {
+        .forEach((x) => {
           x.disabled = false;
           if (x.tagName === "INPUT" && x.type === "number") {
             x.min = 1;
@@ -391,7 +390,7 @@ redirect_from:
 
   function displayThreeStyleData() {
     document.getElementById("threestyledisplay").innerText = data
-      .map(x => x.pair)
+      .map((x) => x.pair)
       .sort()
       .reduce((prev, cur) => `${prev} ${cur}`);
   }
@@ -402,13 +401,10 @@ redirect_from:
     }
   }
   function randomizeCycleDirections(data) {
-    data.forEach(x => {
+    data.forEach((x) => {
       const shouldReverse = Math.floor(Math.random() * 2) == 0;
       if (shouldReverse) {
-        x.pair = x.pair
-          .split("")
-          .reverse()
-          .join("");
+        x.pair = x.pair.split("").reverse().join("");
       }
     });
   }
