@@ -60,7 +60,7 @@ redirect_from:
     <input type="number" value="0" disabled />
     <button disabled onclick="runTest()">Run Partial Test</button>
     <button disabled onclick="runFullTest()">Test All</button>
-    <span>Pause between pairs</span><input type="checkbox" disabled />
+    <span>Pause between pairs</span><input type="checkbox" checked disabled />
   </div>
   <div class="testcontainer" style="display: none;">
     <h3 class="timer">The Time For Current Pair Will Be Shown Here</h3>
@@ -70,6 +70,10 @@ redirect_from:
     <div class="resultscontainer" style="display: none;">
       <h4>Results:</h4>
       <div class="displaybox results"></div>
+      <h4 class="verificationalgorithm">
+        The algorithm to verify your algorithms will be shown here
+      </h4>
+      <div class="verificationcube" style="display: none;"><img /><img /></div>
       <h5 class="resultssummary"></h5>
     </div>
   </div>
@@ -111,16 +115,50 @@ redirect_from:
     runTest();
   }
 
-  function validateAlgorithmFormat(algorithm) {
+  function getCommutatorAlgRegexes() {
     const oneTurn = String.raw`[ULFRDB]2?'?`;
-    const mainPart = String.raw`\[(?:${oneTurn} )*(?:${oneTurn}), (?:${oneTurn} )*(?:${oneTurn})\]`;
+    const mainPart = String.raw`\[((?:${oneTurn} )*(?:${oneTurn})), ((?:${oneTurn} )*(?:${oneTurn}))\]`;
     const rotations = String.raw`[xyz]'?`;
-    const withSetup = String.raw`\[(?:${oneTurn} |${rotations} )*(?:${oneTurn}|${rotations}): ${mainPart}\]`;
-    console.log(withSetup);
+    const withSetup = String.raw`\[((?:${oneTurn} |${rotations} )*(?:${oneTurn}|${rotations})): ${mainPart}\]`;
     const toReg = (x) => new RegExp(x);
-    const simple = toReg(`^${mainPart}$`);
-    const complex = toReg(`^${withSetup}$`);
+    return { simple: toReg(`^${mainPart}$`), complex: toReg(`^${withSetup}$`) };
+  }
+
+  function validateAlgorithmFormat(algorithm) {
+    const { simple, complex } = getCommutatorAlgRegexes();
     return simple.test(algorithm) || complex.test(algorithm);
+  }
+
+  function getInverseAlg(algorithm) {
+    const { simple, complex } = getCommutatorAlgRegexes();
+    const simpleResult = algorithm.match(simple);
+    const complexResult = algorithm.match(complex);
+    if (simpleResult) {
+      return `[${simpleResult[2]}, ${simpleResult[1]}]`;
+    }
+    const inverseMainPart = `[${complexResult[3]}, ${complexResult[2]}]`;
+    const setupMoves = complexResult[1];
+    return `[${setupMoves}: ${inverseMainPart}]`;
+  }
+
+  function resultToAlgInMoveNotation(result) {
+    const commutatorNotation = result.alg;
+    const { simple, complex } = getCommutatorAlgRegexes();
+    const simpleResult = commutatorNotation.match(simple);
+    const complexResult = commutatorNotation.match(complex);
+    if (simpleResult) {
+      return getCommutatorInMoveNotation(simpleResult.slice(1, 3));
+    }
+    const mainAlg = getCommutatorInMoveNotation(complexResult.slice(2, 4));
+    const setupMoves = complexResult[1];
+    const fullAlg = `${setupMoves} ${mainAlg} ${Cube.inverse(setupMoves)}`;
+    return fullAlg;
+
+    function getCommutatorInMoveNotation(commutator) {
+      return `${commutator[0]} ${commutator[1]} ${Cube.inverse(
+        commutator[0]
+      )} ${Cube.inverse(commutator[1])}`;
+    }
   }
 
   window.addEventListener(
@@ -226,7 +264,18 @@ redirect_from:
       document.querySelector(
         "#threestylecontainer .testcontainer .resultscontainer"
       ).style.display = "none";
+
     updateResults();
+
+    const expectedMovesApplied = results.reduce(
+      (currentAlg, nextResult) =>
+        `${currentAlg} ${resultToAlgInMoveNotation(nextResult)}`,
+      ""
+    );
+    executeCubeFn(() =>
+      getSolution(expectedMovesApplied).then(displayVerificationAlgorithm)
+    );
+    displayVerificationCube(expectedMovesApplied);
   }
 
   function showAlg() {
@@ -248,7 +297,7 @@ redirect_from:
     setResults(
       `${prevValue}${prevValue ? "\n" : ""}${curTestIndex}. ${result.pair}: ${(
         result.time / 1000
-      ).toFixed(3)} - ${result.verdict}`
+      ).toFixed(3)} - ${result.verdict}. Algorithm: ${result.alg}`
     );
     if (curTestIndex === 1)
       document.querySelector(
@@ -361,6 +410,12 @@ redirect_from:
     ).innerText = resultSummary;
   }
 
+  function displayVerificationAlgorithm(algorithm) {
+    document.querySelector(
+      "#threestylecontainer .testcontainer .resultscontainer h4.verificationalgorithm"
+    ).innerText = `Verification Algorithm: ${algorithm}`;
+  }
+
   fetch("https://emils-api.herokuapp.com/threestyledata")
     .then((x) => x.json())
     .then((fetchedData) => {
@@ -406,6 +461,9 @@ redirect_from:
       const shouldReverse = Math.floor(Math.random() * 2) == 0;
       if (shouldReverse) {
         x.pair = x.pair.split("").reverse().join("");
+        x.alg = getInverseAlg(x.alg);
+        if (!validateAlgorithmFormat(x.alg))
+          throw new Error("Error in inversing");
       }
     });
   }
