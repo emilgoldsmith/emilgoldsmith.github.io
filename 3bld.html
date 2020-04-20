@@ -266,16 +266,6 @@ redirect_from:
       ).style.display = "none";
 
     updateResults();
-
-    const expectedMovesApplied = results.reduce(
-      (currentAlg, nextResult) =>
-        `${currentAlg} ${resultToAlgInMoveNotation(nextResult)}`,
-      ""
-    );
-    executeCubeFn(() =>
-      getSolution(expectedMovesApplied).then(displayVerificationAlgorithm)
-    );
-    displayVerificationCube(expectedMovesApplied);
   }
 
   function showAlg() {
@@ -324,6 +314,16 @@ redirect_from:
     setExplanation(explanationTypes.VERDICT);
     results.push({ ...data[curTestIndex], time: testResult });
     curTestIndex++;
+
+    const expectedMovesApplied = results.reduce(
+      (currentAlg, nextResult) =>
+        `${currentAlg} ${resultToAlgInMoveNotation(nextResult)}`,
+      ""
+    );
+    executeCubeFn(() =>
+      getSolution(expectedMovesApplied).then(displayVerificationAlgorithm)
+    );
+    displayVerificationCube(expectedMovesApplied);
   }
 
   function completeTest() {
@@ -445,10 +445,23 @@ redirect_from:
     });
 
   function displayThreeStyleData() {
-    document.getElementById("threestyledisplay").innerText = data
+    const knownPairsHtml = data
       .map((x) => x.pair)
       .sort()
-      .reduce((prev, cur) => `${prev} ${cur}`);
+      .reduce(
+        (prev, cur) =>
+          `${prev} <span id="${cur}">${cur}<button onclick="toggleSkip('${cur}')">Toggle Skip</button></span>`,
+        ""
+      );
+    document.getElementById("threestyledisplay").innerHTML = knownPairsHtml;
+  }
+
+  function toggleSkip(pair) {
+    const dataPoint = data.find((x) => x.pair === pair);
+    dataPoint.skipped = !dataPoint.skipped;
+    document.getElementById(pair).style.backgroundColor = dataPoint.skipped
+      ? "grey"
+      : "inherit";
   }
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
