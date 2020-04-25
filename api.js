@@ -48,7 +48,7 @@ app.get("/threestyledata", (req, res) => {
 });
 
 const MongoClient = require("mongodb").MongoClient;
-const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017";
+const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/cubing";
 function runMongoCommand(cb) {
   return new Promise((resolve, reject) => {
     MongoClient.connect(mongoURI, (err, client) => {
@@ -57,7 +57,7 @@ function runMongoCommand(cb) {
         reject(err);
         return;
       }
-      const db = client.db("cubing");
+      const db = client.db();
       cb(db)
         .then(resolve)
         .catch(reject)
