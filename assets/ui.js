@@ -11,14 +11,11 @@ class ThreeStyleInformation {
   }
 
   displayThreeStyleData(threeStyleData) {
+    // <button onclick="toggleSkipPair('${cur}')">Toggle Skip</button>
     const knownPairsHtml = threeStyleData.pairs
       .map((x) => x.pair)
       .sort()
-      .reduce(
-        (prev, cur) =>
-          `${prev} <span id="${cur}">${cur}<button onclick="toggleSkipPair('${cur}')">Toggle Skip</button></span>`,
-        ""
-      );
+      .reduce((prev, cur) => `${prev} <span id="${cur}">${cur}</span>`, "");
     this.containerNode.querySelector(".displaybox").innerHTML = knownPairsHtml;
     this.containerNode.querySelector("h4").innerText +=
       " (" + threeStyleData.numPairs().toString() + ")";
