@@ -1,6 +1,7 @@
-const request = require("request-promise-native");
+const fs = require("fs");
 const crypto = require("crypto");
 const express = require("express");
+const { google } = require("googleapis");
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -16,53 +17,63 @@ app.use(function (req, res, next) {
 
 app.use(require("body-parser").json());
 
-app.get("/threestyledata", (req, res) => {
-  request(
-    "https://docs.google.com/spreadsheets/d/14wlxduDzjtvNZti9YI3lAyy580iXCwcQmp_yzb0m0LE/edit#gid=0"
-  )
-    .then((body) => {
-      const prefix = "bootstrapData = {";
-      const i = body.indexOf(prefix);
-      let depth = 1;
-      let stringifiedData = "{";
-      for (let j = i + prefix.length; depth > 0; j++) {
-        if (body[j] === "{") depth++;
-        else if (body[j] === "}") depth--;
-        stringifiedData += body[j];
-      }
-      data = JSON.parse(JSON.parse(stringifiedData).changes.firstchunk[0][1])[3]
-        .map((x) => x[0][3][1])
-        .slice(2)
-        .reduce((prev, cur, index, arr) => {
-          if (index % 2 == 0) {
-            return prev.concat([{ pair: arr[index], alg: arr[index + 1] }]);
-          }
-          return prev;
-        }, []);
-      res.json(data);
-    })
-    .catch((err) => {
-      console.error(err);
-      res.sendStatus(500);
-    });
+async function getAuthorizedJwtClient() {
+  const { client_email, private_key } = getCredentials();
+
+  const jwtClient = new google.auth.JWT(client_email, null, private_key, [
+    "https://www.googleapis.com/auth/spreadsheets",
+  ]);
+  await jwtClient.authorize();
+  return jwtClient;
+}
+
+function getCredentials() {
+  const credentials = {
+    client_email: process.env.GOOGLE_CLIENT_EMAIL,
+    private_key: process.env.GOOGLE_PRIVATE_KEY,
+  };
+  if (credentials.client_email && credentials.private_key) return credentials;
+  const credentialsFile = JSON.parse(
+    fs.readFileSync("credentials.json", "utf8")
+  );
+  credentials.client_email = credentialsFile.client_email;
+  credentials.private_key = credentialsFile.private_key;
+  return credentials;
+}
+
+app.get("/threestyledata", async (req, res) => {
+  const authorizedJwtClient = await getAuthorizedJwtClient();
+  const sheets = google.sheets({ version: "v4", auth: authorizedJwtClient });
+  const {
+    data: { values: rows },
+  } = await sheets.spreadsheets.values.get({
+    spreadsheetId: "14wlxduDzjtvNZti9YI3lAyy580iXCwcQmp_yzb0m0LE",
+    range: "A2:B",
+  });
+  const formattedData = rows.map((row) => ({ pair: row[0], alg: row[1] }));
+  res.json(formattedData);
 });
 
 const MongoClient = require("mongodb").MongoClient;
 const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/cubing";
 function runMongoCommand(cb) {
   return new Promise((resolve, reject) => {
-    MongoClient.connect(mongoURI, (err, client) => {
-      if (err !== null) {
-        console.error(err);
-        reject(err);
-        return;
+    MongoClient.connect(
+      mongoURI,
+      { useUnifiedTopology: true },
+      (err, client) => {
+        if (err !== null) {
+          console.error(err);
+          reject(err);
+          return;
+        }
+        const db = client.db();
+        cb(db)
+          .then(resolve)
+          .catch(reject)
+          .then(() => client.close());
       }
-      const db = client.db();
-      cb(db)
-        .then(resolve)
-        .catch(reject)
-        .then(() => client.close());
-    });
+    );
   });
 }
 
@@ -82,6 +93,7 @@ app.post("/log-result", async (req, res) => {
   if (hash(req.body.password) !== passwordHash) {
     res.sendStatus(401);
     console.error(`Incorrect password ${req.body.password}`);
+    return;
   }
   const { pair, time, verdict } = req.body.data;
   const correct = verdict === "Correct";
@@ -96,7 +108,7 @@ app.post("/log-result", async (req, res) => {
           return;
         }
         if (resultsForPair.length > 0) {
-          collection.update(
+          collection.updateOne(
             { pair },
             { $push: { results: backendResultToLog } },
             (err, _result) => (err ? reject(err) : resolve())
@@ -108,9 +120,10 @@ app.post("/log-result", async (req, res) => {
           );
         }
       });
-    })
-      .then(() => res.sendStatus(200))
-      .catch(() => res.sendStatus(500));
+    }).then(
+      () => res.sendStatus(200),
+      () => res.sendStatus(500)
+    );
   });
 });
 
