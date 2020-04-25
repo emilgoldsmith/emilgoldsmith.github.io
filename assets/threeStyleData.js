@@ -2,6 +2,67 @@ const IS_DEV = window.location.hostname === "localhost";
 const DOMAIN = IS_DEV
   ? "http://localhost:4000"
   : "https://emils-api.herokuapp.com";
+
+const DONT_STORE = "NO_PASSWORD";
+class PasswordHandler {
+  constructor() {
+    const password = localStorage.getItem("password");
+    if (password === null) {
+      const passwordToStore = this.__promptForPassword();
+      this.__validateAndStorePassword(passwordToStore);
+    } else {
+      this.password = password;
+    }
+  }
+
+  getPassword() {
+    return this.password === DONT_STORE ? null : this.password;
+  }
+
+  __promptForPassword() {
+    const passwordInput = window.prompt(
+      "If you want to be able to store results you need to input the password here. Leave this empty if you don't want to store results"
+    );
+    const passwordToStore = passwordInput === "" ? DONT_STORE : passwordInput;
+    return passwordToStore;
+  }
+
+  async __validateAndStorePassword(passwordToStore) {
+    if (passwordToStore === DONT_STORE) {
+      this.__storePassword(passwordToStore);
+    } else {
+      const valid = await this.__validatePassword(passwordToStore);
+      if (valid) {
+        this.__storePassword(valid);
+      } else {
+        const newPasswordAttempt = this.__promptForPassword();
+        this.__validateAndStorePassword(newPasswordAttempt);
+      }
+    }
+  }
+
+  async __validatePassword(password) {
+    const body = JSON.stringify({
+      password,
+    });
+    const response = await fetch(`${DOMAIN}/validate-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body,
+    });
+
+    return response.status === 200;
+  }
+
+  __storePassword(password) {
+    localStorage.setItem("password", password);
+    this.password = password;
+  }
+}
+
+const passwordHandler = new PasswordHandler();
 class ThreeStyleData {
   constructor(commutatorProcessor) {
     this.pairs = null;
@@ -15,13 +76,18 @@ class ThreeStyleData {
   }
 
   async logResult(result) {
-    console.log(result);
+    const password = passwordHandler.getPassword();
+    if (password === null) return;
+    const body = JSON.stringify({
+      password,
+      data: result,
+    });
     await fetch(`${DOMAIN}/log-result`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(result),
+      body,
     });
   }
 

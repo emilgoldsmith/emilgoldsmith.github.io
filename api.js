@@ -1,4 +1,5 @@
 const request = require("request-promise-native");
+const crypto = require("crypto");
 const express = require("express");
 
 const app = express();
@@ -65,8 +66,24 @@ function runMongoCommand(cb) {
   });
 }
 
+const secret = process.env.AUTH_SECRET || "local-dev-secret";
+function hash(password) {
+  return crypto.createHmac("sha256", secret).update(password).digest("hex");
+}
+const passwordHash = process.env.PASSWORD_HASH || hash("password");
+app.post("/validate-password", (req, res) => {
+  if (hash(req.body.password) !== passwordHash) {
+    res.sendStatus(401);
+  } else {
+    res.sendStatus(200);
+  }
+});
 app.post("/log-result", async (req, res) => {
-  const { pair, time, verdict } = req.body;
+  if (hash(req.body.password) !== passwordHash) {
+    res.sendStatus(401);
+    console.error(`Incorrect password ${req.body.password}`);
+  }
+  const { pair, time, verdict } = req.body.data;
   const correct = verdict === "Correct";
   const backendResultToLog = { time, correct, dateTime: new Date().getTime() };
   runMongoCommand((db) => {
@@ -89,6 +106,24 @@ app.post("/log-result", async (req, res) => {
     });
   });
   res.sendStatus(200);
+});
+
+app.get("/statistics", (req, res) => {
+  runMongoCommand((db) => {
+    return new Promise((resolve, reject) => {
+      const collection = db.collection("corners");
+      collection.find({}).toArray((err, allPairs) => {
+        if (err) {
+          console.error(err);
+          res.sendStatus(500);
+          reject(err);
+          return;
+        }
+        res.json(allPairs);
+        resolve();
+      });
+    });
+  });
 });
 
 app.listen(port);
