@@ -90,6 +90,11 @@ app.post("/log-result", async (req, res) => {
     return new Promise((resolve, reject) => {
       const collection = db.collection("corners");
       collection.find({ pair }).toArray(function (err, resultsForPair) {
+        if (err) {
+          console.error(err);
+          reject(err);
+          return;
+        }
         if (resultsForPair.length > 0) {
           collection.update(
             { pair },
@@ -103,9 +108,10 @@ app.post("/log-result", async (req, res) => {
           );
         }
       });
-    });
+    })
+      .then(() => res.sendStatus(200))
+      .catch(() => res.sendStatus(500));
   });
-  res.sendStatus(200);
 });
 
 app.get("/statistics", (req, res) => {
