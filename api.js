@@ -68,7 +68,7 @@ function runMongoCommand(cb) {
 app.post("/log-result", async (req, res) => {
   const { pair, time, verdict } = req.body;
   const correct = verdict === "Correct";
-  const backendResultToLog = { time, correct };
+  const backendResultToLog = { time, correct, dateTime: new Date().getTime() };
   runMongoCommand((db) => {
     return new Promise((resolve, reject) => {
       const collection = db.collection("corners");
