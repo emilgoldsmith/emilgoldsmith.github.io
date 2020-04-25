@@ -45,14 +45,13 @@
         border-color: black;
       }
     </style>
-    {{
-      layout.extraHead
-    }}
+    {{ layout.extraHead }}
   </head>
   <body>
     <nav>
       <a href="/3bld">3BLD</a>
-      <a href="/cross-blockbuilding">Cross / BlockBuilding</a>
+      <a>Exciting Things To Come</a>
+      <!-- <a href="/cross-blockbuilding">Cross / BlockBuilding</a> -->
     </nav>
     <noscript>
       You need to enable JavaScript to run this app.
@@ -61,7 +60,7 @@
       {{ content }}
     </section>
     <script>
-      document.querySelectorAll("nav a").forEach(x => {
+      document.querySelectorAll("nav a").forEach((x) => {
         if (x.pathname === window.location.pathname) {
           x.classList.add("active");
         }
