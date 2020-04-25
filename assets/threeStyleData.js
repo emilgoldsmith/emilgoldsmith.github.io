@@ -33,7 +33,7 @@ class PasswordHandler {
     } else {
       const valid = await this.__validatePassword(passwordToStore);
       if (valid) {
-        this.__storePassword(valid);
+        this.__storePassword(passwordToStore);
       } else {
         const newPasswordAttempt = this.__promptForPassword();
         this.__validateAndStorePassword(newPasswordAttempt);
