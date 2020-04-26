@@ -32,7 +32,7 @@ function displayVerificationCube(alg) {
   imageTags[1].src = `${baseUrl}x2y'`;
 }
 
-executeCubeFn(() => getScramble().then(displayScramble));
+// executeCubeFn(() => getScramble().then(displayScramble));
 
 function getDisplayCubeUrl(alg) {
   const urlFriendlyAlg = alg.replace(/\s+/g, ""); // remove spaces
