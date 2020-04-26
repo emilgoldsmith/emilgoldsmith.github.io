@@ -25,7 +25,6 @@ function displayScramble(alg) {
 }
 
 function displayVerificationCube(alg) {
-  document.querySelector(".verificationcube").style.display = "block";
   const baseUrl = getDisplayCubeUrl(alg);
   const imageTags = document.querySelectorAll(".verificationcube img");
   imageTags[0].src = baseUrl;

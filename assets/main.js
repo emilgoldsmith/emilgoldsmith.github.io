@@ -130,11 +130,6 @@ function stopTest() {
         `${compositeAlg} ${commutatorProcessor.asSequenceOfMoves(nextAlg)}`,
       ""
     );
-  executeCubeFn(() =>
-    getSolution(expectedMovesApplied).then((alg) =>
-      threeStylePracticeTest.displayVerificationAlgorithm(alg)
-    )
-  );
   displayVerificationCube(expectedMovesApplied);
 }
 
@@ -142,6 +137,20 @@ function completeTest() {
   testState = states.FINISHED;
   threeStylePracticeForm.enableAllElements();
   threeStylePracticeTest.displayFinishedInstructions();
+  const expectedMovesApplied = results
+    .map((x) => x.alg)
+    .reduce(
+      (compositeAlg, nextAlg) =>
+        `${compositeAlg} ${commutatorProcessor.asSequenceOfMoves(nextAlg)}`,
+      ""
+    );
+  executeCubeFn(() =>
+    getSolution(expectedMovesApplied).then((alg) =>
+      window.alert(
+        `Assuming you applied all the algorithms correctly, to unscramble your cube apply this algorithm: ${alg}`
+      )
+    )
+  );
 }
 
 function updateResultsSummary() {

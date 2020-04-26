@@ -112,20 +112,17 @@ class ThreeStylePracticeTest {
     this.resultsContainerId = `${containerId}-results-container`;
     this.sessionResultsNodeId = `${containerId}-session-results`;
     this.correctAlgNodeId = `${containerId}-correct-alg`;
-    this.verificationAlgorithmNodeId = `${containerId}-verification-algorithm`;
     this.resultsSummaryNodeId = `${containerId}-results-summary`;
+    this.verificationCubeNodeId = `${containerId}-verification-cube`;
     this.containerNode.innerHTML = `
           <h3 id="${this.timerNodeId}">The Time For Current Pair Will Be Shown Here</h3>
           <h3 id="${this.currentPairNodeId}">The Pair being Tested Will Show Here</h3>
           <h3 id="${this.correctAlgNodeId}"></h3>
           <p id="${this.instructionNodeId}"></p>
+          <div class="verificationcube" id="${this.verificationCubeNodeId}"><img /><img /></div>
           <div id="${this.resultsContainerId}" style="display: none;">
             <h4>Results:</h4>
             <div id="${this.sessionResultsNodeId}" class="displaybox"></div>
-            <h4 id="${this.verificationAlgorithmNodeId}">
-              The algorithm to verify your algorithms will be shown here
-            </h4>
-            <div class="verificationcube" style="display: none;"><img /><img /></div>
             <h5 id="${this.resultsSummaryNodeId}"></h5>
           </div>
         `;
@@ -198,12 +195,6 @@ class ThreeStylePracticeTest {
 
   hideAlg() {
     document.getElementById(this.correctAlgNodeId).innerText = "";
-  }
-
-  displayVerificationAlgorithm(algorithm) {
-    document.getElementById(
-      this.verificationAlgorithmNodeId
-    ).innerText = `Verification Algorithm: ${algorithm}`;
   }
 
   setResultsSummary(summary) {
