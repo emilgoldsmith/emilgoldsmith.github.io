@@ -67,6 +67,12 @@ window.addEventListener(
   true
 );
 
+window.addEventListener("keydown", (e) => {
+  if (e.key === " " && e.target === document.body) {
+    e.preventDefault();
+  }
+});
+
 function prepTest() {
   curTestIndex = 0;
   testState = states.BEFORE_START;

@@ -172,7 +172,7 @@ class ThreeStylePracticeTest {
   }
 
   resetSessionResults() {
-    document.getElementById(this.resultsContainerId);
+    document.getElementById(this.sessionResultsNodeId).innerText = "";
   }
 
   displayResult(result, testNumber) {
