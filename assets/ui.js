@@ -152,8 +152,8 @@ class ThreeStylePracticeTest {
     this.__setInstructions("Press Space When Finished");
   }
 
-  displayFinishedInstructions() {
-    this.__setInstructions("The Test Is Over");
+  displayFinishedInstructions(resetAlg) {
+    this.__setInstructions(`The Test Is Over. To reset cube apply ${resetAlg}`);
   }
 
   trackTimer(timer) {

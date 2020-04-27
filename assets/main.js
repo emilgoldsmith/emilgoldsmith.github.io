@@ -136,7 +136,6 @@ function stopTest() {
 function completeTest() {
   testState = states.FINISHED;
   threeStylePracticeForm.enableAllElements();
-  threeStylePracticeTest.displayFinishedInstructions();
   const expectedMovesApplied = results
     .map((x) => x.alg)
     .reduce(
@@ -146,9 +145,7 @@ function completeTest() {
     );
   executeCubeFn(() =>
     getSolution(expectedMovesApplied).then((alg) =>
-      window.alert(
-        `Assuming you applied all the algorithms correctly, to unscramble your cube apply this algorithm: ${alg}`
-      )
+      threeStylePracticeTest.displayFinishedInstructions(alg)
     )
   );
 }
