@@ -26,7 +26,9 @@ class ThreeStyleInformation {
 
   getTableHtml(processedStats) {
     const htmlRows = processedStats.reduce((html, nextPair) => {
-      return `${html}<tr><td>${nextPair.pair}</td><td>${nextPair.lastThreeMean}</td><td>${nextPair.lastThreeNumDNF}</td></tr>`;
+      return `${html}<tr><td>${nextPair.pair}</td><td>${(
+        nextPair.lastThreeMean / 1000
+      ).toFixed(3)}</td><td>${nextPair.lastThreeNumDNF}</td></tr>`;
     }, "");
     const statsHtml = `
     <table style="display: inline-block; margin-right: 20px;">
