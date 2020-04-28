@@ -10,15 +10,35 @@ class ThreeStyleInformation {
         `;
   }
 
-  displayThreeStyleData(threeStyleData) {
-    // <button onclick="toggleSkipPair('${cur}')">Toggle Skip</button>
-    const knownPairsHtml = threeStyleData.pairs
-      .map((x) => x.pair)
-      .sort()
-      .reduce((prev, cur) => `${prev} <span id="${cur}">${cur}</span>`, "");
-    this.containerNode.querySelector(".displaybox").innerHTML = knownPairsHtml;
+  displayThreeStyleStats(threeStyleStats) {
+    const numPairs = threeStyleStats.processedStats.length;
+    const statsHtml =
+      this.getTableHtml(
+        threeStyleStats.processedStats.slice(0, Math.round(numPairs / 2))
+      ) +
+      this.getTableHtml(
+        threeStyleStats.processedStats.slice(Math.round(numPairs / 2))
+      );
+    this.containerNode.querySelector(".displaybox").innerHTML = statsHtml;
     this.containerNode.querySelector("h4").innerText +=
-      " (" + threeStyleData.numPairs().toString() + ")";
+      " (" + numPairs.toString() + ")";
+  }
+
+  getTableHtml(processedStats) {
+    const htmlRows = processedStats.reduce((html, nextPair) => {
+      return `${html}<tr><td>${nextPair.pair}</td><td>${nextPair.lastThreeMean}</td><td>${nextPair.lastThreeNumDNF}</td></tr>`;
+    }, "");
+    const statsHtml = `
+    <table style="display: inline-block; margin-right: 20px;">
+      <tr>
+        <th>Pair</th>
+        <th>Mean of last 3</th>
+        <th>Last 3 num DNFs</th>
+      </tr>
+      ${htmlRows}
+    </table>
+    `;
+    return statsHtml;
   }
 }
 

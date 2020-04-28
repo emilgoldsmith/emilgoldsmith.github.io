@@ -9,11 +9,15 @@ const threeStylePracticeTest = new ThreeStylePracticeTest(
 );
 const commutatorProcessor = new CommutatorProcessor();
 const threeStyleData = new ThreeStyleData(commutatorProcessor);
+const threeStyleStatistics = new ThreeStyleStatistics(threeStyleData);
 
-threeStyleData.fetchData().then(() => {
-  threeStyleInformation.displayThreeStyleData(threeStyleData);
-  threeStylePracticeForm.onThreeStyleDataLoaded(threeStyleData);
-});
+threeStyleData
+  .fetchData()
+  .then(() => threeStyleStatistics.fetchData())
+  .then(() => {
+    threeStyleInformation.displayThreeStyleStats(threeStyleStatistics);
+    threeStylePracticeForm.onThreeStyleDataLoaded(threeStyleData);
+  });
 
 let curTestIndex = 0;
 const timer = new Timer();

@@ -142,3 +142,66 @@ class ThreeStyleData {
     });
   }
 }
+
+class ThreeStyleStatistics {
+  constructor(threeStyleData) {
+    this.threeStyleData = threeStyleData;
+    this.fullStats = null;
+    this.processedStats = null;
+  }
+
+  async fetchData() {
+    this.allPairs = this.threeStyleData.pairs
+      .map((x) => x.pair)
+      .concat(threeStyleData.pairs.map((x) => x.pair[1] + x.pair[0]));
+    const response = await fetch(`${DOMAIN}/statistics`);
+    this.fullStats = await response.json();
+    this.processedStats = this.__processStats();
+  }
+
+  __processStats() {
+    const unsortedProcessed = this.fullStats
+      .map((pairInfo) => ({
+        pair: pairInfo.pair,
+        lastThreeMean: this.__getLast3Mean(pairInfo),
+        lastThreeNumDNF: this.__getLast3NumDNF(pairInfo),
+      }))
+      .concat(this.__getMissingPairs());
+    const sortedProcessed = this.__sortByMostPracticeNeeded(unsortedProcessed);
+    return sortedProcessed;
+  }
+
+  __getMissingPairs() {
+    return this.allPairs
+      .filter((x) => this.fullStats.find((y) => x === y.pair) === undefined)
+      .map((pair) => ({ pair, lastThreeMean: NaN, lastThreeNumDNF: 3 }));
+  }
+
+  __getLast3Mean(pairInfo) {
+    const last3 = this.__getLast3(pairInfo);
+    return last3.reduce((sum, next) => sum + next.time, 0) / 3;
+  }
+
+  __getLast3NumDNF(pairInfo) {
+    const last3 = this.__getLast3(pairInfo);
+    const numNotAttempted = 3 - last3.length;
+    return numNotAttempted + last3.filter((x) => !x.correct).length;
+  }
+
+  __getLast3(pairInfo) {
+    return pairInfo.results.slice(-3);
+  }
+
+  __sortByMostPracticeNeeded(unsortedProcessed) {
+    const copyForImmutability = [...unsortedProcessed];
+    const sortedProcessed = copyForImmutability.sort((a, b) => {
+      const dnfDiff = b.lastThreeNumDNF - a.lastThreeNumDNF;
+      if (dnfDiff !== 0) return dnfDiff;
+      if (isNaN(a.lastThreeMean) && isNaN(b.lastThreeMean)) return 0;
+      if (isNaN(b.lastThreeMean)) return 1;
+      if (isNaN(a.lastThreeMean)) return -1;
+      return b.lastThreeMean - a.lastThreeMean;
+    });
+    return sortedProcessed;
+  }
+}
