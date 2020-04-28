@@ -39,7 +39,10 @@ function runTest() {
   pauseBetween = threeStylePracticeForm.shouldPauseBetweenTests();
   numPairsToTest = threeStylePracticeForm.numPairsToTest();
 
-  threeStyleData.randomizeDataOrder();
+  const pairs = threeStyleStatistics.processedStats
+    .slice(0, numPairsToTest)
+    .map((x) => x.pair);
+  threeStyleData.randomizePairsForTesting(pairs);
   prepTest();
 }
 

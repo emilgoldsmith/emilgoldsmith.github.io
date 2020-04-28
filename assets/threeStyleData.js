@@ -72,7 +72,9 @@ class ThreeStyleData {
   async fetchData() {
     const response = await fetch(`${DOMAIN}/threestyledata`);
     this.pairs = await response.json();
+    const reverses = this.pairs.map(this.__getReversePair, this);
     this.__validateCommutators();
+    this.pairs.push(...reverses);
   }
 
   async logResult(result) {
@@ -115,9 +117,13 @@ class ThreeStyleData {
       : "inherit";
   }
 
-  randomizeDataOrder() {
-    this.__shuffleArray(this.pairs);
-    this.__randomizeCycleDirections();
+  randomizePairsForTesting(pairs) {
+    const selectedPairs = pairs.map((pair) => {
+      const index = this.pairs.findIndex((x) => x.pair === pair);
+      return this.pairs.splice(index, 1)[0];
+    });
+    this.__shuffleArray(selectedPairs);
+    this.pairs.unshift(...selectedPairs);
   }
 
   /**
@@ -130,16 +136,13 @@ class ThreeStyleData {
     }
   }
 
-  __randomizeCycleDirections() {
-    this.pairs.forEach((x) => {
-      const shouldReverse = Math.floor(Math.random() * 2) == 0;
-      if (shouldReverse) {
-        x.pair = x.pair.split("").reverse().join("");
-        x.alg = this.commutatorProcessor.inverseCommutator(x.alg);
-        if (!this.commutatorProcessor.validateCommutator(x.alg))
-          throw new Error("Error in inversing");
-      }
-    });
+  __getReversePair(pair) {
+    const copy = { ...pair };
+    copy.pair = copy.pair.split("").reverse().join("");
+    copy.alg = this.commutatorProcessor.inverseCommutator(copy.alg);
+    if (!this.commutatorProcessor.validateCommutator(copy.alg))
+      throw new Error("Error in inversing");
+    return copy;
   }
 }
 
@@ -151,9 +154,6 @@ class ThreeStyleStatistics {
   }
 
   async fetchData() {
-    this.allPairs = this.threeStyleData.pairs
-      .map((x) => x.pair)
-      .concat(threeStyleData.pairs.map((x) => x.pair[1] + x.pair[0]));
     const response = await fetch(`${DOMAIN}/statistics`);
     this.fullStats = await response.json();
     this.processedStats = this.__processStats();
@@ -172,8 +172,13 @@ class ThreeStyleStatistics {
   }
 
   __getMissingPairs() {
-    return this.allPairs
-      .filter((x) => this.fullStats.find((y) => x === y.pair) === undefined)
+    return this.threeStyleData.pairs
+      .map((x) => x.pair)
+      .filter(
+        (dataPair) =>
+          this.fullStats.find((statsPair) => dataPair === statsPair.pair) ===
+          undefined
+      )
       .map((pair) => ({ pair, lastThreeMean: NaN, lastThreeNumDNF: 3 }));
   }
 
