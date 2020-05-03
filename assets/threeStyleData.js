@@ -71,7 +71,7 @@ class ThreeStyleData {
 
   async fetchData() {
     const response = await fetch(`${DOMAIN}/threestyledata`);
-    this.pairs = (await response.json()).map(x => ({...x, alg: x.alg.replace('Lw', 'R x')}));
+    this.pairs = (await response.json()).map(x => ({...x, alg: x.alg.replace('Lw', 'R x\'')}));
     const reverses = this.pairs.map(this.__getReversePair, this);
     this.__validateCommutators();
     this.pairs.push(...reverses);
