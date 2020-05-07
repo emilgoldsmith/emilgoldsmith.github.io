@@ -36,7 +36,7 @@ function displayVerificationCube(alg) {
 function getDisplayCubeUrl(alg) {
   const urlFriendlyAlg = alg.replace(/\s+/g, ""); // remove spaces
   const baseUrl =
-    "http://178.62.114.213/visualcube.php?fmt=png&bg=t&sch=wrgyob&size=150&alg=" +
+    "http://cube.crider.co.uk/visualcube.php?fmt=png&bg=t&sch=wrgyob&size=150&alg=" +
     urlFriendlyAlg;
   return baseUrl;
 }
